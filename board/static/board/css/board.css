@@ -8,38 +8,60 @@
   /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
   --line-hair: 1px;
   --line-board: 2px;
-  --grid-gap: 3px;
-  --board-inset: 5px;
+  --grid-gap: 0px;
+  --board-inset: 0px;
   --radius-board-field: 18px;
-  --radius-tile-slot: 9px;
-  --radius-tile-face: 9px;
+  /* Sudut balok domino; slot sedikit lebih besar dari muka */
+  --radius-tile-slot: 10px;
+  --radius-tile-face: 8px;
   --radius-hub-widget: 8px;
   --ring-active: 2px;
   --tile-radius: var(--radius-tile-face);
   --roll-purple-1: #7b3dff;
   --roll-purple-2: #4a1fa8;
-  /* HUD di atas muka grid (3D + z-index) */
-  --hub-lift: 72px;
-  --hub-stack: 800;
+  /* HUD tengah: lebih tinggi di Z agar tidak tertutup petak 3D (ROLL / dadu) */
+  --hub-lift: 210px;
+  --hub-stack: 2600;
+  /* Selaras .board-field__mid — batas dalam background abu tengah (sedikit lebih rapat) */
+  --board-mid-inset-x: 14%;
+  --board-mid-inset-y: 12%;
+  /* Lebar/tinggi HUD tidak melebihi “lubang” abu (100% = .board-mass / papan) */
+  --hub-asphalt-max-w: calc(100% - 2 * var(--board-mid-inset-x) - clamp(0.35rem, 1.8vw, 0.85rem));
+  --hub-asphalt-max-h: calc(100% - 2 * var(--board-mid-inset-y) - clamp(0.35rem, 1.6vmin, 0.75rem));
+  --hub-float-width: min(var(--hub-asphalt-max-w), clamp(7.75rem, 33vmin, 17rem));
+  --hub-float-max-height: min(var(--hub-asphalt-max-h), 40vmin, 17rem);
+  /* Geser HUD ke bawah (relatif titik tengah papan) */
+  --hub-float-nudge-y: clamp(0.65rem, 2.6vmin, 1.45rem);
   /* Fine-tune arah wajik di layar; 0° = default (Mulai di grid 9,1) */
   --grid-yaw: 0deg;
-  /* Ukuran area papan — lebih besar untuk tampilan tajam di layar lebar */
-  --board-size: min(96vw, 1040px);
+  /* Bingkai kayu lebih tinggi dari lebar papan (proyeksi 3D) */
+  --iso-shell-height-factor: 1.28;
+  /* Papan mengikuti lebar & tinggi layar (ruang untuk HUD + aman) */
+  /* Ruang ekstra vertikal agar proyeksi 3D / tepi papan tidak terpotong viewport */
+  --board-size: min(94vw, calc((100dvh - clamp(1.1rem, 4.5vmin, 2.5rem)) / var(--iso-shell-height-factor)), 980px);
+  /* Area permukaan / tengah (aspal) */
+  --asphalt-1: #6a6d73;
+  --asphalt-2: #55585e;
+  --asphalt-3: #3f4248;
+  --asphalt-4: #2e3035;
+  --asphalt-5: #23252a;
   /* Gaya Let’s Get Rich / Monopoly 3D: perspektif sedikit lebih jauh agar papan besar tetap proporsional */
-  --iso-perspective: 5000px;
+  --iso-perspective: 12000px;
   /* Dasar 0°: nilai X orbit = sudut miring total (bacaan panel “X”) */
   --iso-rotate-x: 0deg;
-  --iso-shell-height-factor: 1.28;
   --iso-view-nudge-y: 1.2%;
-  /* Orbit live (JS → <html>): Euler Y / X / Z pada .board-mass — default Y:0 X:45 Z:0 */
-  --board-3d-x-extra: 45deg;
+  /* Orbit live (JS → <html>): Euler Y / X / Z pada .board-mass — default Y:0 X:50 Z:0 */
+  --board-3d-x-extra: 50deg;
   --board-3d-y: 0deg;
   --board-3d-z: 0deg;
   /* Jarak muka papan ↔ sisi bawah — lebih tebal agar 3D terbaca jelas */
-  --board-thickness: 24px;
+  --board-thickness: 28px;
   /* Skala kartu lebih besar (HD); overflow sel tetap memotong sudut */
-  --tile-scale: 0.92;
-  --tile-scale-hover: 0.96;
+  --tile-scale: 1;
+  --tile-scale-hover: 1;
+  /* Kedalaman petak di Z — lebih rendah agar tidak “menindih” HUD dadu/ROLL */
+  --tile-face-lift: 7px;
+  --tile-face-lift-hover: 11px;
   /* Palet kayu */
   --wood-frame-1: #7a5538;
   --wood-frame-2: #4d3422;
@@ -69,143 +91,93 @@
 
 html {
   overflow-x: hidden;
+  height: 100%;
+  background-color: #030201;
+  /* Semua rem/em mengikuti layar; lebih kecil dari default 16px */
+  font-size: clamp(10px, 1.95vmin + 0.28vw, 13px);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
+  font-size: 1rem;
+  line-height: 1.45;
   color: #faf4eb;
   text-rendering: optimizeLegibility;
+  /* Kayu di tengah layar, gradasi ke hitam di tepi (tanpa “void” kosong) */
   background:
-    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(120, 90, 55, 0.18), transparent 45%),
-    radial-gradient(ellipse 85% 55% at 50% 44%, rgba(55, 40, 28, 0.55), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(30, 20, 14, 0.5), transparent 55%),
-    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 14px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 22px),
-    linear-gradient(178deg, #1a1512 0%, #0d0a08 48%, #050403 100%);
+    radial-gradient(ellipse 140% 125% at 50% 50%, transparent 32%, rgba(0, 0, 0, 0.35) 68%, rgba(0, 0, 0, 0.92) 92%, #000000 100%),
+    radial-gradient(ellipse 95% 80% at 50% 46%, rgba(130, 95, 68, 0.55) 0%, rgba(70, 48, 32, 0.35) 45%, transparent 62%),
+    repeating-linear-gradient(88deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(2deg, rgba(255, 240, 210, 0.03) 0 1px, transparent 1px 20px),
+    linear-gradient(168deg, #4a3426 0%, #2e1f14 38%, #160d08 72%, #070403 100%);
+  background-attachment: fixed;
 }
 
 .app {
-  max-width: 1340px;
-  margin: 0 auto;
-  padding: clamp(1rem, 2.5vw, 1.35rem) clamp(1rem, 2.5vw, 1.5rem) 2.25rem;
-}
-
-.hud-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.15rem;
-  padding: 0.75rem 1rem;
-  border-radius: 18px;
-  background:
-    linear-gradient(145deg, rgba(255, 235, 200, 0.07) 0%, transparent 42%),
-    linear-gradient(165deg, rgba(52, 40, 30, 0.72), rgba(18, 14, 10, 0.52));
-  border: 1px solid rgba(255, 220, 180, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 1px 0 rgba(0, 0, 0, 0.35),
-    var(--shadow-soft);
-  backdrop-filter: blur(16px) saturate(1.15);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.brand-mark {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 1.5rem;
-  color: #0a1a42;
-  background:
-    radial-gradient(circle at 32% 22%, #fffef0 0%, #fff3c4 28%, var(--gold) 65%, #c9a22e 100%);
-  border-radius: 16px;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.4),
-    0 6px 18px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    inset 0 -3px 8px rgba(120, 80, 20, 0.18);
-}
-
-.brand h1 {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  flex: 1;
+  min-height: 0;
   margin: 0;
-  font-size: clamp(1.2rem, 2.5vw, 1.4rem);
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-}
-
-.tagline {
-  margin: 0.2rem 0 0;
-  font-size: 0.82rem;
-  opacity: 0.82;
-  letter-spacing: 0.01em;
-  color: rgba(250, 244, 235, 0.88);
-}
-
-.hud-stats {
+  padding-top: max(0.2rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
+  padding-inline: max(0.35rem, env(safe-area-inset-left, 0px)) max(0.35rem, env(safe-area-inset-right, 0px));
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
 }
 
-.stat {
-  min-width: 140px;
-  padding: 0.65rem 1.05rem;
-  border-radius: 14px;
-  background: linear-gradient(168deg, rgba(110, 82, 60, 0.55), rgba(36, 26, 18, 0.68));
-  border: 1px solid rgba(255, 210, 160, 0.18);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 4px 18px rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(12px);
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  opacity: 0.72;
-  color: rgba(255, 235, 210, 0.85);
-}
-
-.stat-value {
-  font-weight: 800;
-  font-size: clamp(1rem, 2.2vw, 1.12rem);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  margin-top: 0.12rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+/* Diamond: rapat ke batas atas layar; hanya inset aman notch (tanpa jarak tambahan) */
+.app:has(.board-shell--diamond) {
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: min(68vh, 720px);
-  padding-block: clamp(1.1rem, 4.2vmin, 2.75rem);
-  overflow: visible;
+  padding-block: clamp(0.75rem, 3.5vmin, 2rem);
+  overflow-x: hidden;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Diamond: papan ke atas sampai batas area stage; tetap tengah horizontal */
+.stage:has(.board-shell--diamond) {
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: clamp(0.65rem, 3.5vmin, 2rem);
 }
 
 /* Bingkai papan kayu — lebih tinggi dari lebar agar proyeksi 3D tidak “terpotong” horizontal */
 .board-shell {
-  width: var(--board-size);
-  min-height: calc(var(--board-size) * var(--iso-shell-height-factor));
+  width: min(var(--board-size), 100%);
+  max-width: 100%;
+  /* Tinggi mengikuti isi — hindari area kosong besar di atas papan */
+  min-height: 0;
+  height: fit-content;
+  flex-shrink: 0;
+  margin: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 0;
-  border-radius: clamp(20px, 2.6vw, 30px);
+  border-radius: clamp(14px, 2vw, 22px);
   overflow: visible;
   background:
     repeating-linear-gradient(
@@ -230,37 +202,105 @@ body {
     var(--shadow);
 }
 
-/* Tanpa clip-path wajik: bentuk + rotateX membuat sudut papan terpotong tidak rapi */
-.board-shell--diamond {
-  clip-path: none;
+/*
+ * Diamond: --board-size dihitung ulang di subtree ini (lebih besar, ikut layar).
+ * min(lebar aman, tinggi aman / 1.04, plafon vmin & px) — safe-area + sedikit ruang 3D.
+ */
+.board-shell.board-shell--diamond {
+  --board-size: min(
+    min(
+      99.25vw,
+      calc(
+        100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) -
+          clamp(0.12rem, 0.9vw, 0.45rem)
+      )
+    ),
+    calc(
+      (
+          100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
+            clamp(0.32rem, 1.7vmin, 0.9rem)
+        ) / 1.04
+    ),
+    min(98vmin, 1320px)
+  );
+  /* Petak lebih besar di layar (muka kartu memakai area sel lebih penuh) */
+  --tile-scale: 1.12;
+  --tile-scale-hover: 1.16;
+  position: relative;
+  margin-top: -4%;
+  width: min(var(--board-size), 100%);
+  aspect-ratio: 1;
+  height: auto;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border-radius: 0;
+  background: none;
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  filter: none;
+  backdrop-filter: none;
+}
+
+/* Diamond: papan 3D memakai penuh kotak pivot → sel grid / petak lebih lebar */
+.board-shell.board-shell--diamond .board-tilt {
+  width: 100%;
+  height: 100%;
+}
+
+.board-shell.board-shell--diamond .tile {
+  padding: 1px;
+}
+
+.board-shell.board-shell--diamond .tile-meta {
+  font-size: clamp(0.52rem, 1.05vw + 0.18rem, 0.78rem);
+  padding: 0.28rem 0.34rem 0.34rem;
+}
+
+.board-shell.board-shell--diamond .board-pivot {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  background: none;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .board-pivot {
-  width: var(--board-size);
-  height: var(--board-size);
+  width: min(100%, var(--board-size));
+  max-width: 100%;
+  aspect-ratio: 1;
+  height: auto;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(12px, 3vw, 22px);
+  padding: clamp(4px, 1.2vw, 12px);
   overflow: visible;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.12) 0 1px,
-      transparent 1px 10px
-    ),
-    radial-gradient(ellipse 100% 100% at 50% 48%, var(--wood-table-1) 0%, var(--wood-table-2) 78%, #1a1210 100%),
-    radial-gradient(ellipse 70% 55% at 50% 100%, rgba(0, 0, 0, 0.22), transparent 55%);
+  margin: 0;
+  border: none;
+  outline: none;
+  background: none;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 /* Kamera: perspektif + geser; rotasi objek di .board-mass */
 .board-tilt {
   position: relative;
-  width: 84%;
-  height: 84%;
-  max-width: 820px;
-  max-height: 820px;
+  width: min(98%, calc(100% - 8px));
+  height: min(98%, calc(100% - 8px));
+  max-width: none;
+  max-height: none;
   flex: 0 0 auto;
   aspect-ratio: 1;
   overflow: visible;
@@ -281,7 +321,7 @@ body {
   transform-origin: 50% 86%;
 }
 
-/* Satu blok papan 3D: rotasi diamond + lapisan belakang + grid (HUD di .board-mass) */
+/* Satu blok papan 3D: rotasi diamond + grid + HUD di .board-mass */
 .board-field {
   position: relative;
   z-index: 1;
@@ -295,31 +335,18 @@ body {
   /* Tanpa filter di sini: filter pada blok 3D sering mengacaukan hit-test klik ke anak 3D */
 }
 
-.board-field__back {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-board-field);
-  transform: translateZ(calc(-1 * var(--board-thickness)));
-  transform-style: preserve-3d;
-  background:
-    linear-gradient(105deg, rgba(255, 230, 200, 0.07) 0%, transparent 42%),
-    linear-gradient(168deg, #5c4334 0%, #3d2a1f 38%, #2a1c14 72%, #1a110d 100%);
-  border: 1px solid rgba(20, 12, 8, 0.65);
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.22),
-    inset 0 3px 10px rgba(0, 0, 0, 0.28);
-  pointer-events: none;
-}
-
 .board-field__mid {
   position: absolute;
-  inset: 0;
-  border-radius: var(--radius-board-field);
+  /* Lebih sempit dari muka papan: bidang tengah “mengecil ke lubang” agar petak terasa lebih menonjol / dalam */
+  inset: var(--board-mid-inset-y) var(--board-mid-inset-x) var(--board-mid-inset-y) var(--board-mid-inset-x);
+  border-radius: calc(var(--radius-board-field) - 2px);
   transform: translateZ(calc(var(--board-thickness) * -0.5));
   transform-style: preserve-3d;
-  background: linear-gradient(175deg, #4d3628 0%, #3a281c 45%, #2c1c14 100%);
-  border: 1px solid rgba(30, 18, 12, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 220, 190, 0.05);
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 10px),
+    linear-gradient(175deg, var(--asphalt-2) 0%, var(--asphalt-3) 48%, var(--asphalt-5) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   pointer-events: none;
 }
 
@@ -338,46 +365,43 @@ body {
   transform-origin: center center;
   z-index: 0;
   pointer-events: none;
-  background-color: var(--wood-groove);
+  background-color: var(--asphalt-5);
+  /* Aspal abu-abu: area jalur + tengah (ROLL) */
   background-image:
-    repeating-linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.11) 0 var(--line-hair),
-      transparent var(--line-hair) 9px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 235, 200, 0.03) 0 18px,
-      transparent 18px 36px
-    ),
-    radial-gradient(ellipse 110% 95% at 45% 42%, var(--wood-field-1) 0%, var(--wood-field-2) 58%, #1f120c 100%);
-  border: var(--line-board) solid #1a0f0a;
-  /* Tepi muka + tumpukan kayu ekstra = ketebalan visual di tepi */
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 var(--line-hair), transparent var(--line-hair) 10px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 8px),
+    radial-gradient(ellipse 105% 100% at 48% 46%, var(--asphalt-1) 0%, var(--asphalt-3) 52%, var(--asphalt-5) 100%);
+  border: var(--line-board) solid #141518;
+  /* Tepi muka aspal + “tebal” kelabu */
   box-shadow:
-    inset 0 2px 0 rgba(255, 235, 210, 0.12),
-    inset 0 -12px 28px rgba(0, 0, 0, 0.4),
-    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.35),
-    0 3px 0 #4a3628,
-    0 6px 0 #3a2a1f,
-    0 9px 0 #302218,
-    0 12px 0 #281c14,
-    0 15px 0 #1f1610,
-    0 18px 0 #1a120e,
-    0 22px 0 #14100c,
-    0 26px 38px rgba(0, 0, 0, 0.52);
+    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -14px 28px rgba(0, 0, 0, 0.38),
+    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.4),
+    0 3px 0 #3a3c42,
+    0 6px 0 #2f3137,
+    0 9px 0 #282a2f,
+    0 12px 0 #222428,
+    0 15px 0 #1c1d22,
+    0 18px 0 #18191d,
+    0 22px 0 #121318,
+    0 26px 38px rgba(0, 0, 0, 0.5);
 }
 
 /* HUD tengah: anak .board-mass — ikut Y/Z orbit; batalkan pitch X; di depan grid (Z + z-index) */
 .board-hub-float {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: calc(50% + var(--hub-float-nudge-y));
+  scroll-margin-block: min(6rem, 12vh);
   z-index: var(--hub-stack);
-  width: min(44%, 288px);
-  max-width: calc(100% - 2rem);
-  max-height: min(50%, 320px);
+  width: var(--hub-float-width);
+  max-width: min(var(--hub-asphalt-max-w), calc(100% - clamp(0.35rem, 2.5vw, 1.25rem)));
+  max-height: var(--hub-float-max-height);
   height: auto;
   min-height: 0;
+  /* Ukuran kontrol pakai cqw agar tidak “numpuk” melebihi lebar kotak hub */
+  container-type: inline-size;
+  container-name: board-hub;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -394,9 +418,18 @@ body {
 
 .board-hub-float .hub {
   pointer-events: auto;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
   position: relative;
   z-index: 2;
+}
+
+.board-hub-float .hub-arc__center {
+  position: relative;
+  z-index: 3;
+  /* Tarik kolom dadu+ROLL ke arah Ganjil / Genap */
+  margin-inline: clamp(-0.22rem, -1.6cqw, -0.04rem);
 }
 
 /* path_line: 1=bawah…, 2=kiri…, 3=atas…, 4=kanan… — sudut kartu --card-turn di board/tiles.py */
@@ -405,60 +438,68 @@ body {
   z-index: 1;
   min-width: 0;
   min-height: 0;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  padding: 2px;
+  overflow: visible;
   border-radius: var(--radius-tile-slot);
   transform-style: preserve-3d;
   pointer-events: auto;
+  /* Celah tipis antar “balok” domino — selaras aspal */
+  background: linear-gradient(165deg, #25262b 0%, #15161a 100%);
+  --tile-z: var(--tile-face-lift);
+  --tile-z-hover: var(--tile-face-lift-hover);
+}
+
+/* Petak Mulai di pojok: sering tertindih petak tetangga di hit-test */
+.tile[data-tile-code="start"] {
+  z-index: 12;
 }
 
 .tile.is-active {
-  z-index: 4;
+  z-index: 32;
   border-radius: var(--radius-tile-slot);
   box-shadow:
     inset 0 0 0 var(--ring-active) var(--gold),
-    0 0 0 1px var(--gold-soft),
-    0 0 18px rgba(232, 197, 71, 0.45);
+    inset 0 0 0 calc(var(--ring-active) + 2px) var(--gold-soft);
 }
 
-/* Putar balik grid + sudut kartu per path_line (--card-turn); skala agar tidak tembus sel */
+/* Putar balik grid + sudut kartu per path_line (--card-turn); balok domino timbul */
 .tile-frame {
   position: relative;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
   min-height: 0;
   border-radius: var(--tile-radius);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transform-style: preserve-3d;
-  background: linear-gradient(175deg, #fffef8 0%, #f0e8dc 48%, #e4d9c8 100%);
-  border: var(--line-hair) solid #5c4030;
+  background: linear-gradient(168deg, #fffef9 0%, #f4ebe0 38%, #e8dfd2 72%, #ddd2c4 100%);
+  border: 1px solid rgba(32, 22, 14, 0.42);
   box-shadow:
-    inset 0 var(--line-hair) 0 rgba(255, 255, 255, 0.82),
-    inset 0 -2px 0 rgba(60, 40, 28, 0.08),
-    0 1px 0 rgba(255, 255, 255, 0.25),
-    0 2px 0 #4a3428,
-    0 4px 0 #2a1c14,
-    0 7px 14px rgba(0, 0, 0, 0.32);
+    inset 0 2px 4px rgba(255, 255, 255, 0.72),
+    inset 0 -4px 10px rgba(45, 30, 18, 0.16),
+    0 1px 0 rgba(255, 252, 246, 0.35),
+    0 3px 0 rgba(28, 18, 12, 0.55),
+    0 5px 0 rgba(22, 14, 10, 0.38),
+    0 8px 14px rgba(0, 0, 0, 0.28);
   cursor: pointer;
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale)) translateZ(4px);
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale)) translateZ(var(--tile-z, var(--tile-face-lift)));
   transform-origin: center center;
-  transition: transform 0.18s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.18s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.2s ease;
 }
 
 .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover)) translateZ(6px);
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover)) translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
-    inset 0 var(--line-hair) 0 rgba(255, 255, 255, 0.88),
-    inset 0 -2px 0 rgba(60, 40, 28, 0.08),
-    0 3px 0 #4a3428,
-    0 6px 0 #2a1c14,
-    0 10px 18px rgba(0, 0, 0, 0.38);
+    inset 0 2px 5px rgba(255, 255, 255, 0.78),
+    inset 0 -4px 12px rgba(45, 30, 18, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.4),
+    0 4px 0 rgba(28, 18, 12, 0.5),
+    0 7px 0 rgba(22, 14, 10, 0.32),
+    0 12px 20px rgba(0, 0, 0, 0.32);
 }
 
 .tile-frame::after {
@@ -468,17 +509,19 @@ body {
   border-radius: inherit;
   pointer-events: none;
   background: linear-gradient(
-    125deg,
-    rgba(255, 250, 235, 0.35) 0%,
-    transparent 42%,
-    rgba(80, 50, 30, 0.06) 100%
+    145deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    transparent 38%,
+    transparent 58%,
+    rgba(50, 32, 20, 0.05) 100%
   );
 }
 
 .tile-strip {
-  height: 8px;
+  height: 9px;
   flex-shrink: 0;
   background: var(--strip, transparent);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
 }
 
 .tile-art {
@@ -492,36 +535,67 @@ body {
 }
 
 .tile-meta {
-  padding: 0.3rem 0.38rem 0.38rem;
+  padding: 0.3rem 0.36rem 0.36rem;
   text-align: center;
-  color: #241810;
-  line-height: 1.22;
+  color: #120d0a;
+  line-height: 1.28;
   flex-shrink: 0;
-  font-size: clamp(0.6rem, 1.12vw, 0.84rem);
-  background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(236, 228, 214, 0.98));
-  border-top: 1px solid rgba(90, 62, 44, 0.08);
+  font-size: clamp(0.52rem, 0.95vw + 0.16rem, 0.76rem);
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+  background: linear-gradient(180deg, #fffdf9 0%, #f5eee4 45%, #ebe2d6 100%);
+  border-top: 1px solid rgba(55, 38, 26, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .tile-name {
   display: block;
   font-weight: 800;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.025em;
+  color: #0f0a08;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.88),
+    0 0 1px rgba(255, 255, 255, 0.6);
 }
 
 .tile-price {
   display: block;
-  margin-top: 0.08rem;
-  font-size: 0.9em;
-  color: #5a3d24;
-  font-weight: 600;
+  margin-top: 0.1rem;
+  font-size: clamp(0.52em, 0.82vw + 0.16em, 0.82em);
+  color: #2c1c12;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75),
+    0 0 1px rgba(255, 252, 248, 0.5);
 }
 
 .tile--start .tile-frame {
-  border-color: #1a5276;
+  background: linear-gradient(168deg, #f7fbff 0%, #e8f2fa 40%, #d4e6f1 72%, #c5d9e8 100%);
+  border-color: rgba(25, 70, 110, 0.45);
   box-shadow:
-    inset 0 0 0 var(--line-board) rgba(52, 152, 219, 0.35),
-    0 2px 0 #2c1810,
-    0 4px 10px rgba(0, 0, 0, 0.32);
+    inset 0 0 0 2px rgba(41, 128, 185, 0.55),
+    inset 0 2px 4px rgba(255, 255, 255, 0.75),
+    inset 0 -4px 10px rgba(25, 60, 90, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.4),
+    0 3px 0 rgba(20, 50, 80, 0.45),
+    0 5px 0 rgba(14, 40, 65, 0.32),
+    0 8px 14px rgba(0, 0, 0, 0.26);
+}
+
+.tile--start .tile-frame:hover {
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+    translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
+  box-shadow:
+    inset 0 0 0 2px rgba(41, 128, 185, 0.68),
+    inset 0 2px 5px rgba(255, 255, 255, 0.82),
+    inset 0 -4px 12px rgba(25, 60, 90, 0.1),
+    0 1px 0 rgba(255, 252, 246, 0.45),
+    0 4px 0 rgba(20, 50, 80, 0.4),
+    0 7px 0 rgba(14, 40, 65, 0.26),
+    0 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 .tile--start .tile-name::after {
@@ -531,11 +605,82 @@ body {
 }
 
 .tile--jail .tile-frame {
-  border-color: #5d6d7e;
+  background: linear-gradient(168deg, #f4f5f7 0%, #e4e6ea 42%, #d2d5dc 72%, #c3c7cf 100%);
+  border-color: rgba(55, 62, 72, 0.45);
+  box-shadow:
+    inset 0 0 0 2px rgba(93, 109, 126, 0.6),
+    inset 0 2px 4px rgba(255, 255, 255, 0.68),
+    inset 0 -4px 10px rgba(40, 45, 55, 0.14),
+    0 1px 0 rgba(255, 252, 246, 0.35),
+    0 3px 0 rgba(35, 42, 52, 0.5),
+    0 5px 0 rgba(28, 34, 42, 0.35),
+    0 8px 14px rgba(0, 0, 0, 0.26);
+}
+
+.tile--jail .tile-frame:hover {
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+    translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
+  box-shadow:
+    inset 0 0 0 2px rgba(93, 109, 126, 0.72),
+    inset 0 2px 5px rgba(255, 255, 255, 0.76),
+    inset 0 -4px 12px rgba(40, 45, 55, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.38),
+    0 4px 0 rgba(35, 42, 52, 0.44),
+    0 7px 0 rgba(28, 34, 42, 0.3),
+    0 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 .tile--travel .tile-frame {
-  border-color: #117a65;
+  background: linear-gradient(168deg, #f2fbf8 0%, #dff5ef 40%, #ccebe3 72%, #b8e0d5 100%);
+  border-color: rgba(12, 85, 70, 0.42);
+  box-shadow:
+    inset 0 0 0 2px rgba(17, 122, 101, 0.58),
+    inset 0 2px 4px rgba(255, 255, 255, 0.72),
+    inset 0 -4px 10px rgba(10, 70, 58, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.38),
+    0 3px 0 rgba(12, 75, 62, 0.48),
+    0 5px 0 rgba(8, 55, 46, 0.34),
+    0 8px 14px rgba(0, 0, 0, 0.26);
+}
+
+.tile--travel .tile-frame:hover {
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+    translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
+  box-shadow:
+    inset 0 0 0 2px rgba(17, 122, 101, 0.72),
+    inset 0 2px 5px rgba(255, 255, 255, 0.8),
+    inset 0 -4px 12px rgba(10, 70, 58, 0.1),
+    0 1px 0 rgba(255, 252, 246, 0.42),
+    0 4px 0 rgba(12, 75, 62, 0.42),
+    0 7px 0 rgba(8, 55, 46, 0.28),
+    0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Piala Dunia Marmer — satu-satunya festival dengan kode ini */
+.tile[data-tile-code="marble_cup"] .tile-frame {
+  background: linear-gradient(168deg, #faf6ff 0%, #efe6fb 42%, #e2d4f5 72%, #d4c4ed 100%);
+  border-color: rgba(90, 45, 120, 0.42);
+  box-shadow:
+    inset 0 0 0 2px rgba(142, 68, 173, 0.58),
+    inset 0 2px 4px rgba(255, 255, 255, 0.72),
+    inset 0 -4px 10px rgba(70, 35, 95, 0.14),
+    0 1px 0 rgba(255, 252, 246, 0.38),
+    0 3px 0 rgba(95, 48, 125, 0.46),
+    0 5px 0 rgba(70, 32, 98, 0.32),
+    0 8px 14px rgba(0, 0, 0, 0.26);
+}
+
+.tile[data-tile-code="marble_cup"] .tile-frame:hover {
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+    translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
+  box-shadow:
+    inset 0 0 0 2px rgba(142, 68, 173, 0.75),
+    inset 0 2px 5px rgba(255, 255, 255, 0.8),
+    inset 0 -4px 12px rgba(70, 35, 95, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.42),
+    0 4px 0 rgba(95, 48, 125, 0.4),
+    0 7px 0 rgba(70, 32, 98, 0.26),
+    0 12px 20px rgba(0, 0, 0, 0.3);
 }
 
 .hub {
@@ -578,7 +723,7 @@ body {
 
 .hub-brand {
   margin: 0 0 0.15rem;
-  font-size: 0.52rem;
+  font-size: clamp(0.42rem, 1.1vmin, 0.5rem);
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -591,17 +736,21 @@ body {
   flex-direction: row;
   align-items: flex-end;
   justify-content: center;
-  gap: 0.45rem;
+  gap: clamp(0, 0.45vmin, 0.1rem);
   width: 100%;
-  max-width: 300px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .hub-arc__center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.38rem;
-  flex: 0 1 auto;
+  gap: clamp(0.1rem, 1vmin, 0.28rem);
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .hub-inner {
@@ -628,13 +777,18 @@ body {
 
 .hub.hub--float.hub--lgr {
   transform: translateZ(6px);
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
 .hub-inner.hub-inner--float {
-  width: 92%;
-  max-width: min(260px, 96%);
-  flex-shrink: 0;
-  gap: 0.35rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex-shrink: 1;
+  gap: clamp(0.1rem, 1vmin, 0.26rem);
+  max-height: 100%;
 }
 
 .hub-timer {
@@ -643,7 +797,7 @@ body {
   border-radius: 10px;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.18));
   border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 0.62rem;
+  font-size: clamp(0.52rem, 1.35vmin, 0.58rem);
   color: rgba(238, 234, 228, 0.92);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
@@ -657,7 +811,7 @@ body {
 
 .hub-timer__value {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: clamp(0.58rem, 1.65vmin, 0.72rem);
 }
 
 .hub-parity {
@@ -670,7 +824,7 @@ body {
 .btn-parity {
   flex: 1;
   padding: 0.26rem 0.32rem;
-  font-size: 0.62rem;
+  font-size: clamp(0.52rem, 1.35vmin, 0.58rem);
   font-weight: 700;
   letter-spacing: 0.03em;
   color: #2a2d33;
@@ -686,13 +840,13 @@ body {
 /* Tombol bulat biru di sisi — seperti meja LGR */
 .btn-parity--lgr {
   flex: 0 0 auto;
-  width: 50px;
-  height: 50px;
-  min-width: 50px;
-  min-height: 50px;
+  width: clamp(2.35rem, 9.5vmin, 3.35rem);
+  height: clamp(2.35rem, 9.5vmin, 3.35rem);
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   border-radius: 50%;
-  font-size: 0.48rem;
+  font-size: clamp(0.36rem, 1.15vmin, 0.46rem);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: 0.02em;
@@ -748,15 +902,15 @@ body {
 .dice-row {
   display: flex;
   justify-content: center;
-  gap: 0.45rem;
+  gap: clamp(0.25rem, 1.8vmin, 0.5rem);
 }
 
 .dice {
-  width: min(11vw, 48px);
-  height: min(11vw, 48px);
-  border-radius: 10px;
+  width: clamp(2rem, 8vmin, 3rem);
+  height: clamp(2rem, 8vmin, 3rem);
+  border-radius: clamp(6px, 1.5vmin, 10px);
   border: 1px solid rgba(55, 52, 50, 0.55);
-  font-size: 1.15rem;
+  font-size: clamp(0.72rem, 2.7vmin, 0.98rem);
   font-weight: 800;
   color: #2a2d33;
   background: linear-gradient(158deg, #ffffff 0%, #eceae8 45%, #d8d6d4 100%);
@@ -790,17 +944,17 @@ body {
 }
 
 .btn-roll--main {
-  width: min(30vw, 118px);
-  height: min(30vw, 118px);
-  min-width: 76px;
-  min-height: 76px;
+  width: clamp(3.35rem, 18vmin, 7.5rem);
+  height: clamp(3.35rem, 18vmin, 7.5rem);
+  min-width: 0;
+  min-height: 0;
   aspect-ratio: 1;
   border-radius: 50%;
-  font-size: clamp(0.82rem, 2.6vw, 1.08rem);
+  font-size: clamp(0.62rem, 2.65vmin, 0.9rem);
   flex-shrink: 0;
   touch-action: manipulation;
   position: relative;
-  z-index: 5;
+  z-index: 40;
   cursor: pointer;
   /* Bola pink/magenta menonjol di tengah papan */
   background:
@@ -834,11 +988,77 @@ body {
   outline-offset: 3px;
 }
 
+/* Hub: tombol & teks mengikuti lebar kotak (cqw), supaya tidak melampaui .board-hub-float */
+.board-hub-float .hub-arc {
+  align-items: center;
+  gap: 0;
+}
+
+.board-hub-float .dice-row {
+  gap: clamp(0.06rem, min(1.1vmin, 1.8cqw), 0.32rem);
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+
+.board-hub-float .btn-parity--lgr {
+  width: clamp(1.28rem, min(7.2vmin, 20cqw), 2.55rem);
+  height: clamp(1.28rem, min(7.2vmin, 20cqw), 2.55rem);
+  font-size: clamp(0.26rem, min(0.92vmin, 2.7cqw), 0.42rem);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.12em;
+  overflow: hidden;
+}
+
+.board-hub-float .dice {
+  width: clamp(1.2rem, min(6.2vmin, 15cqw), 2.5rem);
+  height: clamp(1.2rem, min(6.2vmin, 15cqw), 2.5rem);
+  font-size: clamp(0.4rem, min(1.95vmin, 4.1cqw), 0.82rem);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.board-hub-float .btn-roll--main {
+  width: clamp(1.72rem, min(11vmin, 28cqw), 4.25rem);
+  height: clamp(1.72rem, min(11vmin, 28cqw), 4.25rem);
+  font-size: clamp(0.4rem, min(1.82vmin, 3.8cqw), 0.76rem);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.12em;
+  overflow: hidden;
+  letter-spacing: 0.03em;
+}
+
+.board-hub-float .hub-timer {
+  font-size: clamp(0.38rem, min(1.28vmin, 2.75cqw), 0.5rem);
+  padding: clamp(0.16rem, min(0.85vmin, 1.6cqw), 0.24rem) clamp(0.22rem, min(1.25vmin, 2.5cqw), 0.34rem);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.board-hub-float .hub-timer__value {
+  font-size: clamp(0.44rem, min(1.4vmin, 3.25cqw), 0.62rem);
+}
+
+.board-hub-float .hub-hint {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.36rem, min(0.92vmin, 2.4cqw), 0.46rem);
+}
+
 .hub-hint {
   margin: 0;
-  font-size: 0.6rem;
+  font-size: clamp(0.4rem, 1.05vmin, 0.5rem);
   opacity: 0.9;
-  line-height: 1.4;
+  line-height: 1.28;
   color: rgba(215, 210, 202, 0.88);
   letter-spacing: 0.01em;
 }
@@ -891,7 +1111,7 @@ body {
 
 .modal h2 {
   margin: 0 0 0.55rem;
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 2.6vw, 1.05rem);
   font-weight: 800;
   letter-spacing: 0.01em;
   color: #0f1f42;
@@ -900,7 +1120,7 @@ body {
 .modal p {
   margin: 0 0 1.1rem;
   line-height: 1.5;
-  font-size: 0.95rem;
+  font-size: clamp(0.78rem, 2.1vw, 0.88rem);
   color: #2c3a55;
 }
 
@@ -913,9 +1133,12 @@ body {
 }
 
 .btn-primary {
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.5rem 1.2rem;
   border-radius: 11px;
   border: none;
+  font-size: clamp(0.75rem, 2.1vw, 0.85rem);
   font-weight: 700;
   cursor: pointer;
   color: #fff;
@@ -940,31 +1163,139 @@ body {
 }
 
 @media (max-width: 640px) {
-  .hud-stats {
-    width: 100%;
-  }
-
-  .stat {
-    flex: 1;
-  }
-
   :root {
-    --iso-perspective: 4000px;
+    --iso-perspective: 12000px;
     --iso-rotate-x: 0deg;
     --iso-shell-height-factor: 1.24;
     --iso-view-nudge-y: 0.8%;
+    --hub-float-nudge-y: clamp(0.42rem, 2vmin, 1.1rem);
+    --hub-float-width: min(var(--hub-asphalt-max-w), clamp(7.25rem, 38vmin, 15.5rem));
+    --hub-float-max-height: min(var(--hub-asphalt-max-h), 44vmin, 16rem);
+  }
+
+  /* Basis rem sedikit lebih besar + vmin agresif — teks UI & petak lebih terbaca di ponsel */
+  html {
+    font-size: clamp(11px, 2.5vmin + 0.48vw, 15px);
+  }
+
+  .board-shell.board-shell--diamond .tile-meta {
+    font-size: clamp(0.58rem, 1.15vw + 0.2rem, 0.86rem);
+    padding: 0.3rem 0.36rem 0.38rem;
+  }
+
+  .tile-meta {
+    font-size: clamp(0.56rem, 1.05vw + 0.18rem, 0.82rem);
+  }
+
+  .tile-price {
+    font-size: clamp(0.54em, 0.95vw + 0.18em, 0.86em);
+  }
+
+  .board-hub-float .btn-parity--lgr {
+    font-size: clamp(0.32rem, min(1.05vmin, 3.1cqw), 0.5rem);
+  }
+
+  .board-hub-float .dice {
+    font-size: clamp(0.46rem, min(2.1vmin, 4.5cqw), 0.88rem);
+  }
+
+  .board-hub-float .btn-roll--main {
+    font-size: clamp(0.46rem, min(1.95vmin, 4.2cqw), 0.82rem);
+  }
+
+  .board-hub-float .hub-timer {
+    font-size: clamp(0.42rem, min(1.42vmin, 3cqw), 0.56rem);
+  }
+
+  .board-hub-float .hub-timer__value {
+    font-size: clamp(0.5rem, min(1.55vmin, 3.5cqw), 0.68rem);
+  }
+
+  .board-hub-float .hub-hint {
+    font-size: clamp(0.4rem, min(1.05vmin, 2.75cqw), 0.52rem);
+  }
+
+  .hub-hint {
+    font-size: clamp(0.44rem, 1.15vmin, 0.54rem);
+  }
+
+  .hub-brand {
+    font-size: clamp(0.46rem, 1.2vmin, 0.54rem);
+  }
+
+  .hub-timer {
+    font-size: clamp(0.56rem, 1.45vmin, 0.62rem);
+  }
+
+  .hub-timer__value {
+    font-size: clamp(0.62rem, 1.75vmin, 0.76rem);
+  }
+
+  .btn-parity {
+    font-size: clamp(0.56rem, 1.45vmin, 0.62rem);
+  }
+
+  .btn-parity--lgr {
+    font-size: clamp(0.4rem, 1.22vmin, 0.5rem);
+  }
+
+  .dice {
+    font-size: clamp(0.78rem, 2.85vmin, 1.02rem);
+  }
+
+  .btn-roll--main {
+    font-size: clamp(0.68rem, 2.85vmin, 0.95rem);
+  }
+
+  .orbit-panel__title {
+    font-size: clamp(0.9rem, 2.85vw, 1rem);
+  }
+
+  .orbit-panel__hint {
+    font-size: clamp(0.68rem, 1.85vmin, 0.76rem);
+    line-height: 1.42;
+  }
+
+  .orbit-joystick-readout {
+    font-size: clamp(0.62rem, 1.65vmin, 0.7rem);
+  }
+
+  .orbit-joystick-readout--3 {
+    font-size: clamp(0.58rem, 1.55vmin, 0.64rem);
+  }
+
+  .orbit-label {
+    font-size: clamp(0.64rem, 1.72vmin, 0.72rem);
+  }
+
+  .orbit-value {
+    font-size: clamp(0.62rem, 1.65vmin, 0.7rem);
+  }
+
+  .orbit-reset {
+    font-size: clamp(0.7rem, 1.85vmin, 0.78rem);
+  }
+
+  .modal h2 {
+    font-size: clamp(1rem, 3.2vw, 1.12rem);
+  }
+
+  .modal p {
+    font-size: clamp(0.84rem, 2.65vw, 0.95rem);
+  }
+
+  .btn-primary {
+    font-size: clamp(0.82rem, 2.4vw, 0.92rem);
   }
 
   .board-tilt {
-    width: 86%;
-    height: 86%;
-    max-width: 100%;
-    max-height: min(92vw, 640px);
+    width: min(98%, calc(100% - 6px));
+    height: min(98%, calc(100% - 6px));
+    max-width: none;
+    max-height: none;
   }
 
   .board-hub-float {
-    width: min(46%, 248px);
-    max-height: min(46%, 268px);
     transform:
       rotateX(calc(-1 * (var(--iso-rotate-x) + var(--board-3d-x-extra, 0deg))))
       translate(-50%, -50%)
@@ -974,6 +1305,82 @@ body {
 
   .orbit-panel {
     width: min(calc(100vw - 2rem), 280px);
+  }
+}
+
+/* Tablet: tipografi antara ponsel & desktop; jarak baca nyaman di layar medium */
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: clamp(10.75px, 1.85vmin + 0.32vw, 13.5px);
+  }
+
+  .board-shell.board-shell--diamond .tile-meta {
+    font-size: clamp(0.54rem, 1vw + 0.19rem, 0.82rem);
+  }
+
+  .tile-meta {
+    font-size: clamp(0.54rem, 0.92vw + 0.17rem, 0.8rem);
+  }
+
+  .board-hub-float .btn-parity--lgr {
+    font-size: clamp(0.3rem, min(0.98vmin, 2.85cqw), 0.46rem);
+  }
+
+  .board-hub-float .dice {
+    font-size: clamp(0.42rem, min(2vmin, 4.25cqw), 0.85rem);
+  }
+
+  .board-hub-float .btn-roll--main {
+    font-size: clamp(0.42rem, min(1.88vmin, 4cqw), 0.8rem);
+  }
+
+  .board-hub-float .hub-timer {
+    font-size: clamp(0.4rem, min(1.35vmin, 2.9cqw), 0.52rem);
+  }
+
+  .board-hub-float .hub-timer__value {
+    font-size: clamp(0.46rem, min(1.48vmin, 3.4cqw), 0.64rem);
+  }
+
+  .board-hub-float .hub-hint {
+    font-size: clamp(0.38rem, min(1vmin, 2.55cqw), 0.48rem);
+  }
+
+  .orbit-panel__title {
+    font-size: clamp(0.86rem, 2.2vw, 0.96rem);
+  }
+
+  .orbit-panel__hint {
+    font-size: clamp(0.64rem, 1.58vmin, 0.72rem);
+  }
+
+  .orbit-joystick-readout,
+  .orbit-value {
+    font-size: clamp(0.6rem, 1.52vmin, 0.66rem);
+  }
+
+  .orbit-joystick-readout--3 {
+    font-size: clamp(0.56rem, 1.48vmin, 0.62rem);
+  }
+
+  .orbit-label {
+    font-size: clamp(0.62rem, 1.58vmin, 0.68rem);
+  }
+
+  .orbit-reset {
+    font-size: clamp(0.68rem, 1.68vmin, 0.74rem);
+  }
+
+  .modal h2 {
+    font-size: clamp(0.98rem, 2.4vw, 1.08rem);
+  }
+
+  .modal p {
+    font-size: clamp(0.8rem, 2.05vw, 0.9rem);
+  }
+
+  .btn-primary {
+    font-size: clamp(0.78rem, 2vw, 0.88rem);
   }
 }
 
@@ -1059,7 +1466,7 @@ body {
 
 .orbit-panel__title {
   margin: 0 0 0.3rem;
-  font-size: 1rem;
+  font-size: clamp(0.82rem, 2.4vw, 0.92rem);
   font-weight: 800;
   letter-spacing: 0.03em;
   color: #f8f6ff;
@@ -1068,7 +1475,7 @@ body {
 
 .orbit-panel__hint {
   margin: 0 0 0.85rem;
-  font-size: 0.73rem;
+  font-size: clamp(0.62rem, 1.65vmin, 0.68rem);
   opacity: 0.82;
   line-height: 1.4;
   color: rgba(230, 234, 250, 0.88);
@@ -1151,7 +1558,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  font-size: 0.68rem;
+  font-size: clamp(0.58rem, 1.55vmin, 0.64rem);
   font-variant-numeric: tabular-nums;
   color: rgba(230, 236, 255, 0.88);
   padding: 0 0.15rem;
@@ -1161,7 +1568,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.35rem;
-  font-size: 0.62rem;
+  font-size: clamp(0.54rem, 1.45vmin, 0.58rem);
   text-align: center;
 }
 
@@ -1173,7 +1580,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 0.72rem;
+  font-size: clamp(0.6rem, 1.6vmin, 0.66rem);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   opacity: 0.85;
@@ -1189,7 +1596,7 @@ body {
 .orbit-value {
   display: block;
   margin-top: 0.15rem;
-  font-size: 0.68rem;
+  font-size: clamp(0.58rem, 1.55vmin, 0.64rem);
   font-variant-numeric: tabular-nums;
   opacity: 0.75;
   text-align: right;
@@ -1202,7 +1609,7 @@ body {
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: clamp(0.66rem, 1.75vmin, 0.72rem);
   cursor: pointer;
   color: #f6f8ff;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));

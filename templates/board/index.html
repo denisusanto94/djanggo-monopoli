@@ -4,39 +4,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0d0a08">
+  <meta name="theme-color" content="#030201">
   <title>Monopoli Game</title>
   <link rel="stylesheet" href="{% static 'board/css/board.css' %}">
 </head>
 <body>
   <div class="app">
-    <header class="hud-top">
-      <div class="brand">
-        <span class="brand-mark">M</span>
-        <div>
-          <h1>Monopoli Game</h1>
-          <p class="tagline">Papan 3D meja · gaya Let's Get Rich · Mulai bawah kiri · 32 petak</p>
-        </div>
-      </div>
-      <div class="hud-stats">
-        <div class="stat">
-          <span class="stat-label">Uang</span>
-          <span class="stat-value" id="money">1.500.000</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">Posisi</span>
-          <span class="stat-value" id="position-label">Mulai</span>
-        </div>
-      </div>
-    </header>
-
     <main class="stage">
       <div class="board-shell board-shell--diamond">
         <div class="board-pivot">
         <div class="board-tilt">
         <div class="board-mass" id="board-mass">
         <div class="board-field" id="board-field">
-        <div class="board-field__back" aria-hidden="true"></div>
         <div class="board-field__mid" aria-hidden="true"></div>
         <div class="board-grid" id="board-grid" aria-label="Papan monopoli">
           {% for t in tiles %}
@@ -44,6 +23,7 @@
             class="tile tile--{{ t.kind }} tile--line{{ t.path_line }}"
             data-index="{{ t.index }}"
             data-path-line="{{ t.path_line }}"
+            data-tile-code="{{ t.code }}"
             style="grid-row: {{ t.grid_row }}; grid-column: {{ t.grid_col }}; --card-turn: {{ t.card_turn_deg|floatformat:0 }}deg;"
           >
             <div class="tile-frame">
@@ -74,7 +54,6 @@
         <div class="board-hub-float" id="board-hub-float" role="region" aria-label="Kendali permainan">
           <div class="hub hub--float hub--lgr">
             <div class="hub-inner hub-inner--float">
-              <p class="hub-brand" aria-hidden="true">Let's Get Rich</p>
               <div class="hub-timer" aria-hidden="true">
                 <span class="hub-timer__label">Batas waktu</span>
                 <span class="hub-timer__value">—</span>
@@ -123,7 +102,7 @@
       <h3 class="orbit-panel__title" id="orbit-panel-title">Posisi 3D papan</h3>
       <p class="orbit-panel__hint" id="orbit-panel-hint">
         Seret di area joystick: geser kiri/kanan = putar Y tak terbatas, atas/bawah = miring X. Tahan Shift + seret = roll Z.
-        Area tengah (dadu, ROLL) di tengah .board-mass: default bacaan X papan 45°, sedangkan kontrol membatalkan pitch X agar tetap datar (X efektif 0°). Papan punya lapisan belakang kayu (ketebalan 3D).
+        Area tengah (dadu, ROLL) di tengah .board-mass: default bacaan X papan 50°, sedangkan kontrol membatalkan pitch X agar tetap datar (X efektif 0°).
       </p>
       <div class="orbit-joystick-wrap">
         <div
@@ -143,14 +122,14 @@
         </div>
         <div class="orbit-joystick-readout orbit-joystick-readout--3" aria-live="polite">
           <span id="orbit-read-yaw">Y: 0°</span>
-          <span id="orbit-read-pitch">X: 45°</span>
+          <span id="orbit-read-pitch">X: 50°</span>
           <span id="orbit-read-roll">Z: 0°</span>
         </div>
       </div>
       <div class="orbit-field">
         <label class="orbit-label" for="orbit-persp">Perspektif</label>
-        <input type="range" id="orbit-persp" min="2200" max="12000" value="4200" step="100" />
-        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">4200px</span>
+        <input type="range" id="orbit-persp" min="2200" max="12000" value="12000" step="100" />
+        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">12000px</span>
       </div>
       <button type="button" class="orbit-reset" id="orbit-reset">Atur ulang</button>
     </div>

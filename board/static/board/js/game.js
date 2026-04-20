@@ -39,7 +39,7 @@
     const cell = document.querySelector(`.tile[data-index="${index}"]`);
     if (cell) cell.classList.add("is-active");
     const t = tiles[index];
-    positionLabel.textContent = t.name;
+    if (positionLabel) positionLabel.textContent = t.name;
   }
 
   function placeTokenOnCell(index) {
@@ -86,6 +86,14 @@
 
   btnGanjil?.addEventListener("click", () => setParity("ganjil"));
   btnGenap?.addEventListener("click", () => setParity("genap"));
+  dieA?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    void activateRoll();
+  });
+  dieB?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    void activateRoll();
+  });
   setParity("genap");
 
   let lastRollAt = 0;
@@ -111,7 +119,7 @@
 
   /* 3D + pointer-events: lubang tengah — cadangan hit-test lewat rect layar */
   const boardMass = el("board-mass");
-  const HIT_PAD = 18;
+  const HIT_PAD = 28;
   function rectHit(node, x, y) {
     if (!node) return false;
     const r = node.getBoundingClientRect();
@@ -127,6 +135,7 @@
     if (rectHit(btnGanjil, x, y)) return "ganjil";
     if (rectHit(btnGenap, x, y)) return "genap";
     if (rectHit(btnRoll, x, y)) return "roll";
+    if (rectHit(dieA, x, y) || rectHit(dieB, x, y)) return "roll";
     return null;
   }
   function onBoardMassPointerDownCapture(e) {
@@ -154,9 +163,9 @@
   const LS_ORBIT_V3 = "mono.board3d.v3";
   const LS_ORBIT_V2 = "mono.board3d.v2";
   const LS_ORBIT_V1 = "mono.board3d.v1";
-  /** Default panel orbit: Y:0° X:45° Z:0° (sama dengan reset & :root); HUD membatalkan pitch X lewat CSS */
+  /** Default panel orbit: Y:0° X:50° Z:0° (sama dengan reset & :root); HUD membatalkan pitch X lewat CSS */
   const DEFAULT_ORBIT_YAW = 0;
-  const DEFAULT_ORBIT_PITCH = 45;
+  const DEFAULT_ORBIT_PITCH = 50;
   const DEFAULT_ORBIT_ROLL = 0;
   const MAX_PITCH = 78;
   /** Nilai yang dipakai versi joystick lama (v2) untuk pitch dari posisi knob */
@@ -190,7 +199,7 @@
   function readBasePerspective() {
     const raw = getComputedStyle(root).getPropertyValue("--iso-perspective").trim();
     const m = /^([\d.]+)px$/i.exec(raw);
-    return m ? Math.round(Number.parseFloat(m[1])) : 4200;
+    return m ? Math.round(Number.parseFloat(m[1])) : 12000;
   }
 
   function knobMaxTravelPx() {
@@ -424,12 +433,12 @@
     e.preventDefault();
   }
 
-  orbitJoystick.addEventListener("pointerdown", onJoyPointerDown);
-  orbitJoystick.addEventListener("pointermove", onJoyPointerMove);
-  orbitJoystick.addEventListener("pointerup", onJoyPointerUp);
-  orbitJoystick.addEventListener("pointercancel", onJoyPointerUp);
+  orbitJoystick?.addEventListener("pointerdown", onJoyPointerDown);
+  orbitJoystick?.addEventListener("pointermove", onJoyPointerMove);
+  orbitJoystick?.addEventListener("pointerup", onJoyPointerUp);
+  orbitJoystick?.addEventListener("pointercancel", onJoyPointerUp);
 
-  orbitJoystick.addEventListener("keydown", (e) => {
+  orbitJoystick?.addEventListener("keydown", (e) => {
     const stepYaw = e.shiftKey ? 5.5 : 2.8;
     const stepPitch = e.shiftKey ? 4.5 : 2.2;
     const stepRoll = 4;
@@ -454,7 +463,7 @@
     placeTokenOnCell(pos);
   });
 
-  orbitToggle.addEventListener("click", (e) => {
+  orbitToggle?.addEventListener("click", (e) => {
     e.stopPropagation();
     openOrbitPanel(orbitPanel.hidden);
   });

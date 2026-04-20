@@ -8,7 +8,8 @@
   /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
   --line-hair: 1px;
   --line-board: 2px;
-  --grid-gap: 0px;
+  /* Jarak antar sel petak — cukup lebar agar tidak tumpang tindih saat skala / 3D */
+  --grid-gap: clamp(3px, 0.65vmin, 7px);
   --board-inset: 0px;
   --radius-board-field: 18px;
   /* Sudut balok domino; slot sedikit lebih besar dari muka */
@@ -35,10 +36,10 @@
   /* Fine-tune arah wajik di layar; 0° = default (Mulai di grid 9,1) */
   --grid-yaw: 0deg;
   /* Bingkai kayu lebih tinggi dari lebar papan (proyeksi 3D) */
-  --iso-shell-height-factor: 1.28;
+  --iso-shell-height-factor: 1.24;
   /* Papan mengikuti lebar & tinggi layar (ruang untuk HUD + aman) */
   /* Ruang ekstra vertikal agar proyeksi 3D / tepi papan tidak terpotong viewport */
-  --board-size: min(94vw, calc((100dvh - clamp(1.1rem, 4.5vmin, 2.5rem)) / var(--iso-shell-height-factor)), 980px);
+  --board-size: min(96vw, calc((100dvh - clamp(1rem, 4.2vmin, 2.35rem)) / var(--iso-shell-height-factor)), 1040px);
   /* Area permukaan / tengah (aspal) */
   --asphalt-1: #6f7279;
   --asphalt-2: #585b63;
@@ -210,28 +211,28 @@ body {
 
 /*
  * Diamond: --board-size dihitung ulang di subtree ini (lebih besar, ikut layar).
- * min(lebar aman, tinggi aman / 1.04, plafon vmin & px) — safe-area + sedikit ruang 3D.
+ * min(lebar aman, tinggi aman / 1.02, plafon vmin & px) — disesuaikan setelah petak diperbesar.
  */
 .board-shell.board-shell--diamond {
   --board-size: min(
     min(
-      99.25vw,
+      99.6vw,
       calc(
         100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) -
-          clamp(0.12rem, 0.9vw, 0.45rem)
+          clamp(0.1rem, 0.85vw, 0.42rem)
       )
     ),
     calc(
       (
           100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
-            clamp(0.32rem, 1.7vmin, 0.9rem)
-        ) / 1.04
+            clamp(0.28rem, 1.55vmin, 0.85rem)
+        ) / 1.02
     ),
-    min(98vmin, 1320px)
+    min(99vmin, 1420px)
   );
-  /* Petak lebih besar di layar (muka kartu memakai area sel lebih penuh) */
-  --tile-scale: 1.12;
-  --tile-scale-hover: 1.16;
+  /* Skala moderat — tetap di dalam sel + gap, hindari overlap antar petak */
+  --tile-scale: 1.04;
+  --tile-scale-hover: 1.08;
   position: relative;
   margin-top: -4%;
   width: min(var(--board-size), 100%);
@@ -258,7 +259,17 @@ body {
 }
 
 .board-shell.board-shell--diamond .tile {
-  padding: 1px;
+  /* Selaras petak lain: inset kecil dalam sel + gap grid */
+  padding: 2px;
+}
+
+.board-shell.board-shell--diamond .tile[data-tile-code="start"],
+.board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
+.board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
+.board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
+  --tile-scale: 1.12;
+  --tile-scale-hover: 1.2;
+  padding: clamp(3px, 0.5vmin, 6px);
 }
 
 .board-shell.board-shell--diamond .tile-meta {
@@ -456,11 +467,43 @@ body {
   background: linear-gradient(165deg, #2a2c32 0%, #1a1b20 100%);
   --tile-z: var(--tile-face-lift);
   --tile-z-hover: var(--tile-face-lift-hover);
+  /* Pemanjang vertikal default; pojok/khusus override ke 1 */
+  --tile-stretch-y: 1;
+}
+
+/* Tinggi petak jalur (sumbu domino); bukan Mulai / Pulau Terpencil / Piala Dunia Marmer / Keliling Dunia */
+.tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
+  --tile-stretch-y: 1.44;
+}
+
+/*
+ * Pojok & petak khusus: muka persegi 1:1, skala seragam (tanpa scaleY memanjang).
+ * Padding + frame sedikit lebih kecil dari sel = jarak ke tetangga; flex menengahkan muka.
+ */
+.tile[data-tile-code="start"],
+.tile[data-tile-code="corner_jail"],
+.tile[data-tile-code="marble_cup"],
+.tile[data-tile-code="world_tour"] {
+  --tile-stretch-y: 1;
+  --tile-scale: 1.08;
+  --tile-scale-hover: 1.14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(3px, 0.55vmin, 7px);
+  box-sizing: border-box;
 }
 
 /* Petak Mulai di pojok: sering tertindih petak tetangga di hit-test */
 .tile[data-tile-code="start"] {
   z-index: 12;
+}
+
+.tile[data-tile-code="corner_jail"],
+.tile[data-tile-code="marble_cup"],
+.tile[data-tile-code="world_tour"] {
+  z-index: 11;
 }
 
 .tile.is-active {
@@ -493,13 +536,23 @@ body {
     0 5px 0 rgba(26, 18, 12, 0.32),
     0 8px 16px rgba(0, 0, 0, 0.22);
   cursor: pointer;
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale)) translateZ(var(--tile-z, var(--tile-face-lift)));
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale))
+    scaleY(var(--tile-stretch-y, 1))
+    translateZ(var(--tile-z, var(--tile-face-lift)));
   transform-origin: center center;
   transition: transform 0.22s cubic-bezier(0.34, 1.15, 0.64, 1), box-shadow 0.22s ease;
 }
 
 .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover)) translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale-hover))
+    scaleY(var(--tile-stretch-y, 1))
+    translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
     inset 0 2px 6px rgba(255, 255, 255, 0.82),
     inset 0 -4px 12px rgba(45, 30, 18, 0.1),
@@ -593,7 +646,11 @@ body {
 }
 
 .tile--start .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale-hover))
+    scaleY(var(--tile-stretch-y, 1))
     translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
     inset 0 0 0 2px rgba(41, 128, 185, 0.68),
@@ -625,7 +682,11 @@ body {
 }
 
 .tile--jail .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale-hover))
+    scaleY(var(--tile-stretch-y, 1))
     translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
     inset 0 0 0 2px rgba(93, 109, 126, 0.72),
@@ -651,7 +712,11 @@ body {
 }
 
 .tile--travel .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale-hover))
+    scaleY(var(--tile-stretch-y, 1))
     translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
     inset 0 0 0 2px rgba(17, 122, 101, 0.72),
@@ -678,7 +743,11 @@ body {
 }
 
 .tile[data-tile-code="marble_cup"] .tile-frame:hover {
-  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover))
+  transform:
+    rotate(calc(45deg - var(--grid-yaw)))
+    rotate(var(--card-turn, 0deg))
+    scale(var(--tile-scale-hover))
+    scaleY(var(--tile-stretch-y, 1))
     translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
     inset 0 0 0 2px rgba(142, 68, 173, 0.75),
@@ -688,6 +757,28 @@ body {
     0 4px 0 rgba(95, 48, 125, 0.4),
     0 7px 0 rgba(70, 32, 98, 0.26),
     0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Muka kartu persegi 1:1 — sedikit lebih sempit dari sel agar ada “nap” antar petak */
+.tile[data-tile-code="start"] .tile-frame,
+.tile[data-tile-code="corner_jail"] .tile-frame,
+.tile[data-tile-code="marble_cup"] .tile-frame,
+.tile[data-tile-code="world_tour"] .tile-frame {
+  aspect-ratio: 1 / 1;
+  width: min(100%, calc(100% - 2px));
+  max-width: 100%;
+  height: auto;
+  max-height: min(100%, calc(100% - 2px));
+  flex-shrink: 0;
+}
+
+/* Teks pojok sedikit lebih rapat agar proporsi 1:1 tetap rapi */
+.tile[data-tile-code="start"] .tile-meta,
+.tile[data-tile-code="corner_jail"] .tile-meta,
+.tile[data-tile-code="marble_cup"] .tile-meta,
+.tile[data-tile-code="world_tour"] .tile-meta {
+  padding: 0.22rem 0.26rem 0.26rem;
+  line-height: 1.25;
 }
 
 .hub {
@@ -1174,7 +1265,7 @@ body {
   :root {
     --iso-perspective: 15500px;
     --iso-rotate-x: 0deg;
-    --iso-shell-height-factor: 1.24;
+    --iso-shell-height-factor: 1.2;
     --iso-view-nudge-y: 0.55%;
     --hub-float-nudge-y: clamp(0.42rem, 2vmin, 1.1rem);
     --hub-float-width: min(var(--hub-asphalt-max-w), clamp(7.25rem, 38vmin, 15.5rem));
@@ -1186,17 +1277,18 @@ body {
     font-size: clamp(11px, 2.5vmin + 0.48vw, 15px);
   }
 
+  /* Font petak tetap 5px di ponsel (tidak ikut html rem) */
   .board-shell.board-shell--diamond .tile-meta {
-    font-size: clamp(0.58rem, 1.15vw + 0.2rem, 0.86rem);
+    font-size: 5px;
     padding: 0.3rem 0.36rem 0.38rem;
   }
 
   .tile-meta {
-    font-size: clamp(0.56rem, 1.05vw + 0.18rem, 0.82rem);
+    font-size: 5px;
   }
 
   .tile-price {
-    font-size: clamp(0.54em, 0.95vw + 0.18em, 0.86em);
+    font-size: 5px;
   }
 
   .board-hub-float .btn-parity--lgr {
@@ -1322,12 +1414,17 @@ body {
     font-size: clamp(10.75px, 1.85vmin + 0.32vw, 13.5px);
   }
 
+  /* Font petak tetap 5px di tablet */
   .board-shell.board-shell--diamond .tile-meta {
-    font-size: clamp(0.54rem, 1vw + 0.19rem, 0.82rem);
+    font-size: 5px;
   }
 
   .tile-meta {
-    font-size: clamp(0.54rem, 0.92vw + 0.17rem, 0.8rem);
+    font-size: 5px;
+  }
+
+  .tile-price {
+    font-size: 5px;
   }
 
   .board-hub-float .btn-parity--lgr {

@@ -1,0 +1,49 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+/static_collected/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Tests & coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Packaging
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors / IDE
+.idea/
+.vscode/
+
+/aset monopoli

@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monopoli Game</title>
+  <link rel="stylesheet" href="{% static 'board/css/board.css' %}">
+</head>
+<body>
+  <div class="app">
+    <header class="hud-top">
+      <div class="brand">
+        <span class="brand-mark">M</span>
+        <div>
+          <h1>Monopoli Game</h1>
+          <p class="tagline">Papan kayu · Mulai bawah kiri · 32 petak</p>
+        </div>
+      </div>
+      <div class="hud-stats">
+        <div class="stat">
+          <span class="stat-label">Uang</span>
+          <span class="stat-value" id="money">1.500.000</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Posisi</span>
+          <span class="stat-value" id="position-label">Mulai</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="board-shell board-shell--diamond">
+        <div class="board-pivot">
+        <div class="board-tilt">
+        <div class="board-grid" id="board-grid" aria-label="Papan monopoli">
+          {% for t in tiles %}
+          <article
+            class="tile tile--{{ t.kind }} tile--line{{ t.path_line }}"
+            data-index="{{ t.index }}"
+            data-path-line="{{ t.path_line }}"
+            style="grid-row: {{ t.grid_row }}; grid-column: {{ t.grid_col }}; --card-turn: {{ t.card_turn_deg|floatformat:0 }}deg;"
+          >
+            <div class="tile-frame">
+              {% if t.color %}
+              <div class="tile-strip" style="--strip: {{ t.color }}"></div>
+              {% endif %}
+              <img
+                class="tile-art"
+                src="{% static t.asset_file %}"
+                alt=""
+                width="120"
+                height="120"
+                loading="lazy"
+              >
+              <div class="tile-meta">
+                <span class="tile-name">{{ t.name }}</span>
+                {% if t.price %}
+                <span class="tile-price">Rp {{ t.price }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+
+          <div class="hub" style="grid-row: 2 / span 7; grid-column: 2 / span 7;">
+            <div class="hub-inner">
+              <div class="hub-timer" aria-hidden="true">
+                <span class="hub-timer__label">Batas waktu</span>
+                <span class="hub-timer__value">—</span>
+              </div>
+              <div class="hub-parity" role="group" aria-label="Pilihan ganjil genap">
+                <button type="button" class="btn-parity" id="btn-ganjil">Ganjil</button>
+                <button type="button" class="btn-parity" id="btn-genap">Genap</button>
+              </div>
+              <div class="dice-row">
+                <button type="button" class="dice" id="die-a" aria-label="Dadu A">?</button>
+                <button type="button" class="dice" id="die-b" aria-label="Dadu B">?</button>
+              </div>
+              <button type="button" class="btn-roll btn-roll--main" id="btn-roll">ROLL</button>
+              <p class="hub-hint">Klik petak untuk detail. Dari Mulai: naik kiri, atas, kanan turun, bawah kanan→kiri.</p>
+            </div>
+          </div>
+          <div class="token" id="token" aria-hidden="true"></div>
+        </div>
+        </div>
+        </div>
+      </div>
+    </main>
+
+    <dialog class="modal" id="tile-modal">
+      <form method="dialog" class="modal-form">
+        <h2 id="modal-title">Petak</h2>
+        <p id="modal-body"></p>
+        <menu class="modal-actions">
+          <button value="close" class="btn-primary">Tutup</button>
+        </menu>
+      </form>
+    </dialog>
+  </div>
+
+  <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>
+  <script src="{% static 'board/js/game.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+:root {
+  --gold: #e8c547;
+  --glass: rgba(255, 248, 235, 0.1);
+  --shadow: 0 20px 48px rgba(15, 8, 4, 0.55);
+  /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
+  --line-hair: 1px;
+  --line-board: 2px;
+  --grid-gap: 2px;
+  --board-inset: 4px;
+  --radius-board-field: 12px;
+  --radius-tile-slot: 8px;
+  --radius-tile-face: 8px;
+  --radius-hub-widget: 8px;
+  --ring-active: 2px;
+  --tile-radius: var(--radius-tile-face);
+  --roll-purple-1: #7b3dff;
+  --roll-purple-2: #4a1fa8;
+  /* Fine-tune arah wajik di layar; 0° = default (Mulai di grid 9,1) */
+  --grid-yaw: 0deg;
+  /* Skala kartu; sel .tile overflow:hidden mengatasi sudut memanjang saat rotasi */
+  --tile-scale: 0.84;
+  --tile-scale-hover: 0.88;
+  /* Palet kayu */
+  --wood-frame-1: #7a5538;
+  --wood-frame-2: #4d3422;
+  --wood-frame-3: #2c1a12;
+  --wood-table-1: #4a3224;
+  --wood-table-2: #2e1f16;
+  --wood-field-1: #5c3f2e;
+  --wood-field-2: #3d281c;
+  --wood-inlay-1: #9a7652;
+  --wood-inlay-2: #6b4d36;
+  --wood-groove: #1a100c;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #f8f0e6;
+  background:
+    radial-gradient(1000px 520px at 50% 0%, rgba(180, 140, 90, 0.22), transparent 55%),
+    linear-gradient(168deg, #1f1410 0%, #0d0908 100%);
+}
+
+.app {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+}
+
+.hud-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #0b1f4d;
+  background: radial-gradient(circle at 30% 25%, #fff6bf, var(--gold));
+  border-radius: 16px;
+  box-shadow: var(--shadow), inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+}
+
+.tagline {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.hud-stats {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.stat {
+  min-width: 140px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  background: linear-gradient(165deg, rgba(90, 62, 44, 0.45), rgba(35, 22, 16, 0.55));
+  border: 1px solid rgba(200, 170, 130, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Bingkai papan kayu (wajik) */
+.board-shell {
+  width: min(92vw, 880px);
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 20px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 14px,
+      rgba(0, 0, 0, 0.06) 14px 15px,
+      transparent 15px 28px
+    ),
+    repeating-linear-gradient(
+      3deg,
+      rgba(255, 220, 180, 0.04) 0 1px,
+      transparent 1px 22px
+    ),
+    linear-gradient(155deg, var(--wood-frame-1) 0%, var(--wood-frame-2) 42%, var(--wood-frame-3) 100%);
+  border: 3px solid #1f120c;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 180, 0.22),
+    inset 0 -8px 24px rgba(0, 0, 0, 0.35),
+    var(--shadow);
+}
+
+.board-shell--diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.board-pivot {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.12) 0 1px,
+      transparent 1px 10px
+    ),
+    radial-gradient(ellipse 100% 100% at 50% 48%, var(--wood-table-1) 0%, var(--wood-table-2) 72%, #120a08 100%);
+}
+
+/* Kemiringan ringan saja (bukan isometrik per-petak) */
+.board-tilt {
+  width: 70.71%;
+  height: 70.71%;
+  max-width: 640px;
+  max-height: 640px;
+  flex: 0 0 auto;
+  aspect-ratio: 1;
+  transform: rotateX(14deg);
+  transform-origin: center center;
+}
+
+.board-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(9, 1fr);
+  gap: var(--grid-gap);
+  padding: var(--board-inset);
+  border-radius: var(--radius-board-field);
+  transform: rotate(calc(-45deg + var(--grid-yaw)));
+  transform-origin: center center;
+  background-color: var(--wood-groove);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.11) 0 var(--line-hair),
+      transparent var(--line-hair) 9px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 235, 200, 0.03) 0 18px,
+      transparent 18px 36px
+    ),
+    radial-gradient(ellipse 110% 95% at 45% 42%, var(--wood-field-1) 0%, var(--wood-field-2) 58%, #1f120c 100%);
+  border: var(--line-board) solid #26160f;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 210, 170, 0.12),
+    inset 0 -12px 28px rgba(0, 0, 0, 0.45),
+    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.35);
+}
+
+/* path_line: 1=bawah…, 2=kiri…, 3=atas…, 4=kanan… — sudut kartu --card-turn di board/tiles.py */
+.tile {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-tile-slot);
+}
+
+.tile.is-active {
+  z-index: 4;
+  box-shadow: inset 0 0 0 var(--ring-active) var(--gold);
+}
+
+/* Putar balik grid + sudut kartu per path_line (--card-turn); skala agar tidak tembus sel */
+.tile-frame {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  border-radius: var(--tile-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(175deg, #fffef8 0%, #f0e8dc 48%, #e4d9c8 100%);
+  border: var(--line-hair) solid #5c4030;
+  box-shadow:
+    inset 0 var(--line-hair) 0 rgba(255, 255, 255, 0.75),
+    inset 0 -2px 0 rgba(60, 40, 28, 0.12),
+    0 2px 0 #3d291c,
+    0 4px 10px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale));
+  transform-origin: center center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tile-frame:hover {
+  transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover));
+  box-shadow:
+    inset 0 var(--line-hair) 0 rgba(255, 255, 255, 0.85),
+    inset 0 -2px 0 rgba(60, 40, 28, 0.1),
+    0 3px 0 #3d291c,
+    0 6px 14px rgba(0, 0, 0, 0.38);
+}
+
+.tile-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 250, 235, 0.35) 0%,
+    transparent 42%,
+    rgba(80, 50, 30, 0.06) 100%
+  );
+}
+
+.tile-strip {
+  height: 7px;
+  flex-shrink: 0;
+  background: var(--strip, transparent);
+}
+
+.tile-art {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  object-fit: cover;
+  background: linear-gradient(180deg, #ebe4d8, #f7f2ea);
+}
+
+.tile-meta {
+  padding: 0.22rem 0.3rem 0.3rem;
+  text-align: center;
+  color: #2a1a12;
+  line-height: 1.2;
+  flex-shrink: 0;
+  font-size: clamp(0.55rem, 1.05vw, 0.72rem);
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.75), rgba(232, 222, 208, 0.95));
+}
+
+.tile-name {
+  display: block;
+  font-weight: 700;
+}
+
+.tile-price {
+  display: block;
+  margin-top: 0.08rem;
+  font-size: 0.9em;
+  color: #5a3d24;
+  font-weight: 600;
+}
+
+.tile--start .tile-frame {
+  border-color: #1a5276;
+  box-shadow:
+    inset 0 0 0 var(--line-board) rgba(52, 152, 219, 0.35),
+    0 2px 0 #2c1810,
+    0 4px 10px rgba(0, 0, 0, 0.32);
+}
+
+.tile--start .tile-name::after {
+  content: " \2191";
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+.tile--jail .tile-frame {
+  border-color: #5d6d7e;
+}
+
+.tile--travel .tile-frame {
+  border-color: #117a65;
+}
+
+.hub {
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-board-field);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.07) 0 var(--line-hair),
+      transparent var(--line-hair) 16px
+    ),
+    radial-gradient(ellipse 95% 85% at 50% 35%, var(--wood-inlay-1) 0%, var(--wood-inlay-2) 58%, #3d2618 100%);
+  border: var(--line-board) solid #2a1810;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 230, 200, 0.25),
+    inset 0 -10px 22px rgba(0, 0, 0, 0.28),
+    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.25);
+}
+
+.hub-inner {
+  width: 88%;
+  max-width: 200px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  transform: rotate(calc(45deg - var(--grid-yaw)));
+  transform-origin: center center;
+}
+
+.hub-timer {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius-hub-widget);
+  background: rgba(40, 26, 18, 0.2);
+  border: var(--line-hair) solid rgba(60, 40, 28, 0.35);
+  font-size: 0.62rem;
+  color: #2a1810;
+}
+
+.hub-timer__label {
+  display: block;
+  opacity: 0.75;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hub-timer__value {
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.hub-parity {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-parity {
+  flex: 1;
+  padding: 0.25rem 0.3rem;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #2a1810;
+  border: var(--line-hair) solid #3d2618;
+  border-radius: var(--radius-hub-widget);
+  cursor: pointer;
+  background: linear-gradient(180deg, #e8dcc8, #c4a882);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 235, 0.5),
+    0 2px 0 #2a1810;
+}
+
+.btn-parity.is-active {
+  background: linear-gradient(180deg, #f0e4d0, #d4b896);
+  border-color: #7b3dff;
+  color: #2c1050;
+}
+
+.dice-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.dice {
+  width: min(14vw, 48px);
+  height: min(14vw, 48px);
+  border-radius: var(--radius-tile-face);
+  border: var(--line-hair) solid #4a3224;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2a1810;
+  background: linear-gradient(145deg, #fffef6, #e8dcc8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 4px 0 #2a1810,
+    0 6px 12px rgba(0, 0, 0, 0.3);
+  cursor: default;
+}
+
+.btn-roll {
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.btn-roll--main {
+  width: min(30vw, 100px);
+  height: min(30vw, 100px);
+  border-radius: 50%;
+  font-size: clamp(0.75rem, 2.4vw, 0.95rem);
+  background: radial-gradient(circle at 35% 28%, #b894ff, var(--roll-purple-1) 38%, var(--roll-purple-2));
+  box-shadow:
+    inset 0 2px 8px rgba(255, 255, 255, 0.35),
+    0 5px 0 #2d0f6e,
+    0 10px 18px rgba(0, 0, 0, 0.4);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-roll--main:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.25),
+    0 2px 0 #2d0f6e,
+    0 6px 12px rgba(0, 0, 0, 0.35);
+}
+
+.hub-hint {
+  margin: 0;
+  font-size: 0.6rem;
+  opacity: 0.9;
+  line-height: 1.35;
+  color: #2a1810;
+}
+
+.token {
+  position: absolute;
+  z-index: 6;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff, #ff4b6a 40%, #c31432);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  left: 0;
+  top: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease, left 0.12s ease, top 0.12s ease;
+}
+
+.token.visible {
+  opacity: 1;
+}
+
+.modal {
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  max-width: min(92vw, 380px);
+  color: #0b1f4d;
+  box-shadow: var(--shadow);
+}
+
+.modal::backdrop {
+  background: rgba(3, 10, 30, 0.55);
+}
+
+.modal-form {
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.modal p {
+  margin: 0 0 1rem;
+  line-height: 1.45;
+  font-size: 0.95rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.btn-primary {
+  padding: 0.45rem 1.1rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #2f6bff, #1e4fd6);
+}
+
+@media (max-width: 640px) {
+  .hud-stats {
+    width: 100%;
+  }
+
+  .stat {
+    flex: 1;
+  }
+
+  .board-tilt {
+    width: 76%;
+    height: 76%;
+  }
+}

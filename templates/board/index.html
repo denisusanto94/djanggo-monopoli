@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0a08">
   <title>Monopoli Game</title>
   <link rel="stylesheet" href="{% static 'board/css/board.css' %}">
 </head>
@@ -14,7 +15,7 @@
         <span class="brand-mark">M</span>
         <div>
           <h1>Monopoli Game</h1>
-          <p class="tagline">Papan kayu · Mulai bawah kiri · 32 petak</p>
+          <p class="tagline">Papan 3D meja · gaya Let's Get Rich · Mulai bawah kiri · 32 petak</p>
         </div>
       </div>
       <div class="hud-stats">
@@ -33,6 +34,10 @@
       <div class="board-shell board-shell--diamond">
         <div class="board-pivot">
         <div class="board-tilt">
+        <div class="board-mass" id="board-mass">
+        <div class="board-field" id="board-field">
+        <div class="board-field__back" aria-hidden="true"></div>
+        <div class="board-field__mid" aria-hidden="true"></div>
         <div class="board-grid" id="board-grid" aria-label="Papan monopoli">
           {% for t in tiles %}
           <article
@@ -49,8 +54,8 @@
                 class="tile-art"
                 src="{% static t.asset_file %}"
                 alt=""
-                width="120"
-                height="120"
+                width="160"
+                height="160"
                 loading="lazy"
               >
               <div class="tile-meta">
@@ -63,28 +68,35 @@
           </article>
           {% endfor %}
 
-          <div class="hub" style="grid-row: 2 / span 7; grid-column: 2 / span 7;">
-            <div class="hub-inner">
+          <div class="token" id="token" aria-hidden="true"></div>
+        </div>
+        </div>
+        <div class="board-hub-float" id="board-hub-float" role="region" aria-label="Kendali permainan">
+          <div class="hub hub--float hub--lgr">
+            <div class="hub-inner hub-inner--float">
+              <p class="hub-brand" aria-hidden="true">Let's Get Rich</p>
               <div class="hub-timer" aria-hidden="true">
                 <span class="hub-timer__label">Batas waktu</span>
                 <span class="hub-timer__value">—</span>
               </div>
-              <div class="hub-parity" role="group" aria-label="Pilihan ganjil genap">
-                <button type="button" class="btn-parity" id="btn-ganjil">Ganjil</button>
-                <button type="button" class="btn-parity" id="btn-genap">Genap</button>
+              <div class="hub-arc" role="group" aria-label="Dadu dan ganjil genap">
+                <button type="button" class="btn-parity btn-parity--lgr" id="btn-ganjil">Ganjil</button>
+                <div class="hub-arc__center">
+                  <div class="dice-row">
+                    <button type="button" class="dice" id="die-a" aria-label="Dadu A">?</button>
+                    <button type="button" class="dice" id="die-b" aria-label="Dadu B">?</button>
+                  </div>
+                  <button type="button" class="btn-roll btn-roll--main" id="btn-roll">ROLL</button>
+                </div>
+                <button type="button" class="btn-parity btn-parity--lgr" id="btn-genap">Genap</button>
               </div>
-              <div class="dice-row">
-                <button type="button" class="dice" id="die-a" aria-label="Dadu A">?</button>
-                <button type="button" class="dice" id="die-b" aria-label="Dadu B">?</button>
-              </div>
-              <button type="button" class="btn-roll btn-roll--main" id="btn-roll">ROLL</button>
               <p class="hub-hint">Klik petak untuk detail. Dari Mulai: naik kiri, atas, kanan turun, bawah kanan→kiri.</p>
             </div>
           </div>
-          <div class="token" id="token" aria-hidden="true"></div>
         </div>
         </div>
         </div>
+      </div>
       </div>
     </main>
 
@@ -97,6 +109,71 @@
         </menu>
       </form>
     </dialog>
+  </div>
+
+  <div class="orbit-dock" id="orbit-dock">
+    <div
+      class="orbit-panel"
+      id="orbit-panel"
+      role="dialog"
+      aria-labelledby="orbit-panel-title"
+      aria-modal="false"
+      hidden
+    >
+      <h3 class="orbit-panel__title" id="orbit-panel-title">Posisi 3D papan</h3>
+      <p class="orbit-panel__hint" id="orbit-panel-hint">
+        Seret di area joystick: geser kiri/kanan = putar Y tak terbatas, atas/bawah = miring X. Tahan Shift + seret = roll Z.
+        Area tengah (dadu, ROLL) di tengah .board-mass: default bacaan X papan 45°, sedangkan kontrol membatalkan pitch X agar tetap datar (X efektif 0°). Papan punya lapisan belakang kayu (ketebalan 3D).
+      </p>
+      <div class="orbit-joystick-wrap">
+        <div
+          class="orbit-joystick"
+          id="orbit-joystick"
+          role="slider"
+          aria-label="Joystick kamera papan"
+          aria-valuemin="-9999"
+          aria-valuemax="9999"
+          aria-valuenow="0"
+          aria-describedby="orbit-panel-hint"
+          tabindex="0"
+        >
+          <div class="orbit-joystick__ticks" aria-hidden="true"></div>
+          <div class="orbit-joystick__ring" aria-hidden="true"></div>
+          <div class="orbit-joystick__knob" id="orbit-joystick-knob"></div>
+        </div>
+        <div class="orbit-joystick-readout orbit-joystick-readout--3" aria-live="polite">
+          <span id="orbit-read-yaw">Y: 0°</span>
+          <span id="orbit-read-pitch">X: 45°</span>
+          <span id="orbit-read-roll">Z: 0°</span>
+        </div>
+      </div>
+      <div class="orbit-field">
+        <label class="orbit-label" for="orbit-persp">Perspektif</label>
+        <input type="range" id="orbit-persp" min="2200" max="12000" value="4200" step="100" />
+        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">4200px</span>
+      </div>
+      <button type="button" class="orbit-reset" id="orbit-reset">Atur ulang</button>
+    </div>
+    <button
+      type="button"
+      class="orbit-fab"
+      id="orbit-toggle"
+      aria-expanded="false"
+      aria-controls="orbit-panel"
+      title="Atur posisi 3D papan"
+    >
+      <svg class="orbit-fab__icon" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          d="M12 3c4 2 6 5.5 6 9s-2 7-6 9M12 3C8 5 6 8.5 6 12s2 7 6 9"
+        />
+        <ellipse cx="12" cy="12" rx="9" ry="3.2" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(-18 12 12)" />
+        <circle cx="18" cy="8" r="2" fill="currentColor" />
+      </svg>
+    </button>
   </div>
 
   <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>

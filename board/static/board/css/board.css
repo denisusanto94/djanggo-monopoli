@@ -45,13 +45,14 @@
   --asphalt-3: #43464e;
   --asphalt-4: #32343c;
   --asphalt-5: #282a32;
-  /* Gaya Let’s Get Rich / Monopoly 3D: perspektif sedikit lebih jauh agar papan besar tetap proporsional */
-  --iso-perspective: 12000px;
+  /* LGR-style: perspektif jauh = foreshortening ringan, semua petak lebih terbaca */
+  --iso-perspective: 16500px;
   /* Dasar 0°: nilai X orbit = sudut miring total (bacaan panel “X”) */
   --iso-rotate-x: 0deg;
-  --iso-view-nudge-y: 1.2%;
-  /* Orbit live (JS → <html>): Euler Y / X / Z pada .board-mass — default Y:0 X:50 Z:0 */
-  --board-3d-x-extra: 50deg;
+  /* Geser vertikal halus setelah perspective() — sedikit naik agar diamond tidak “tenggelam” bawah */
+  --iso-view-nudge-y: 0.45%;
+  /* Orbit live (JS → <html>): Euler Y / X / Z pada .board-mass — default ~LGR: pitch moderat */
+  --board-3d-x-extra: 38deg;
   --board-3d-y: 0deg;
   --board-3d-z: 0deg;
   /* Jarak muka papan ↔ sisi bawah — lebih tebal agar 3D terbaca jelas */
@@ -59,9 +60,9 @@
   /* Skala kartu lebih besar (HD); overflow sel tetap memotong sudut */
   --tile-scale: 1;
   --tile-scale-hover: 1;
-  /* Kedalaman petak di Z — lebih rendah agar tidak “menindih” HUD dadu/ROLL */
-  --tile-face-lift: 7px;
-  --tile-face-lift-hover: 11px;
+  /* Kedalaman petak di Z — LGR: agak rendah agar muka petak sejajar & teks lebih terbaca */
+  --tile-face-lift: 6px;
+  --tile-face-lift-hover: 10px;
   /* Palet kayu */
   --wood-frame-1: #7a5538;
   --wood-frame-2: #4d3422;
@@ -311,7 +312,8 @@ body {
   overflow: visible;
   transform-style: preserve-3d;
   transform: perspective(var(--board-3d-persp, var(--iso-perspective))) translateY(var(--iso-view-nudge-y));
-  transform-origin: 50% 86%;
+  /* Pivot lebih ke pusat visual diamond — sudut X terasa seimbang, pojok tidak terlalu menciut */
+  transform-origin: 50% 76%;
 }
 
 .board-mass {
@@ -323,7 +325,7 @@ body {
     rotateZ(var(--board-3d-z, 0deg))
     rotateY(var(--board-3d-y, 0deg))
     rotateX(calc(var(--iso-rotate-x) + var(--board-3d-x-extra, 0deg)));
-  transform-origin: 50% 86%;
+  transform-origin: 50% 76%;
 }
 
 /* Satu blok papan 3D: rotasi diamond + grid + HUD di .board-mass */
@@ -1170,10 +1172,10 @@ body {
 
 @media (max-width: 640px) {
   :root {
-    --iso-perspective: 12000px;
+    --iso-perspective: 15500px;
     --iso-rotate-x: 0deg;
     --iso-shell-height-factor: 1.24;
-    --iso-view-nudge-y: 0.8%;
+    --iso-view-nudge-y: 0.55%;
     --hub-float-nudge-y: clamp(0.42rem, 2vmin, 1.1rem);
     --hub-float-width: min(var(--hub-asphalt-max-w), clamp(7.25rem, 38vmin, 15.5rem));
     --hub-float-max-height: min(var(--hub-asphalt-max-h), 44vmin, 16rem);

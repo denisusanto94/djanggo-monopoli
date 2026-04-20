@@ -163,16 +163,19 @@
   const LS_ORBIT_V3 = "mono.board3d.v3";
   const LS_ORBIT_V2 = "mono.board3d.v2";
   const LS_ORBIT_V1 = "mono.board3d.v1";
-  /** Default panel orbit: Y:0° X:50° Z:0° (sama dengan reset & :root); HUD membatalkan pitch X lewat CSS */
+  /** Default panel orbit: Y:0° X:~LGR Z:0° (sama dengan reset & :root); HUD membatalkan pitch X lewat CSS */
   const DEFAULT_ORBIT_YAW = 0;
-  const DEFAULT_ORBIT_PITCH = 50;
+  const DEFAULT_ORBIT_PITCH = 38;
   const DEFAULT_ORBIT_ROLL = 0;
-  const MAX_PITCH = 78;
+  /** Pitch berlebihan = petak pojok terlalu menciut seperti “dilihat dari samping” */
+  const MAX_PITCH = 68;
+  const ORBIT_PERSP_MIN = 2200;
+  const ORBIT_PERSP_MAX = 20000;
   /** Nilai yang dipakai versi joystick lama (v2) untuk pitch dari posisi knob */
   const MAX_PITCH_V2 = 26;
   const DEAD_ZONE = 0.12;
   const SENS_YAW = 0.42;
-  const SENS_PITCH = 0.38;
+  const SENS_PITCH = 0.32;
   const SENS_ROLL = 0.45;
   const KNOB_MOVE_SCALE = 28;
 
@@ -199,7 +202,7 @@
   function readBasePerspective() {
     const raw = getComputedStyle(root).getPropertyValue("--iso-perspective").trim();
     const m = /^([\d.]+)px$/i.exec(raw);
-    return m ? Math.round(Number.parseFloat(m[1])) : 12000;
+    return m ? Math.round(Number.parseFloat(m[1])) : 16500;
   }
 
   function knobMaxTravelPx() {
@@ -321,7 +324,7 @@
           orbitYaw = yaw;
           orbitPitchExtra = pitch;
           orbitRoll = 0;
-          const persp = Math.max(2200, Math.min(12000, Math.round(o.persp / 100) * 100));
+          const persp = Math.max(ORBIT_PERSP_MIN, Math.min(ORBIT_PERSP_MAX, Math.round(o.persp / 100) * 100));
           if (orbitPersp) orbitPersp.value = String(persp);
           localStorage.setItem(
             LS_ORBIT_V3,
@@ -345,7 +348,7 @@
       orbitYaw = yaw;
       orbitPitchExtra = pitch;
       orbitRoll = 0;
-      const persp = Math.max(2200, Math.min(12000, Math.round(o.persp / 100) * 100));
+      const persp = Math.max(ORBIT_PERSP_MIN, Math.min(ORBIT_PERSP_MAX, Math.round(o.persp / 100) * 100));
       if (orbitPersp) orbitPersp.value = String(persp);
       localStorage.setItem(
         LS_ORBIT_V3,
@@ -384,7 +387,7 @@
       orbitPitchExtra = clamp(stored.pitch, -MAX_PITCH, MAX_PITCH);
       orbitRoll = stored.roll;
       orbitPersp.value = String(
-        Math.max(2200, Math.min(12000, Math.round(stored.persp / 100) * 100)),
+        Math.max(ORBIT_PERSP_MIN, Math.min(ORBIT_PERSP_MAX, Math.round(stored.persp / 100) * 100)),
       );
     } else if (orbitPersp) {
       orbitYaw = DEFAULT_ORBIT_YAW;

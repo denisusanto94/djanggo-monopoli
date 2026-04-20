@@ -102,7 +102,7 @@
       <h3 class="orbit-panel__title" id="orbit-panel-title">Posisi 3D papan</h3>
       <p class="orbit-panel__hint" id="orbit-panel-hint">
         Seret di area joystick: geser kiri/kanan = putar Y tak terbatas, atas/bawah = miring X. Tahan Shift + seret = roll Z.
-        Area tengah (dadu, ROLL) di tengah .board-mass: default bacaan X papan 50°, sedangkan kontrol membatalkan pitch X agar tetap datar (X efektif 0°).
+        Area tengah (dadu, ROLL) di tengah .board-mass: default mirip LINE Let’s Get Rich (X papan ~38°, perspektif jauh); kontrol membatalkan pitch X agar HUD tetap datar (X efektif 0°).
       </p>
       <div class="orbit-joystick-wrap">
         <div
@@ -122,14 +122,14 @@
         </div>
         <div class="orbit-joystick-readout orbit-joystick-readout--3" aria-live="polite">
           <span id="orbit-read-yaw">Y: 0°</span>
-          <span id="orbit-read-pitch">X: 50°</span>
+          <span id="orbit-read-pitch">X: 38°</span>
           <span id="orbit-read-roll">Z: 0°</span>
         </div>
       </div>
       <div class="orbit-field">
         <label class="orbit-label" for="orbit-persp">Perspektif</label>
-        <input type="range" id="orbit-persp" min="2200" max="12000" value="12000" step="100" />
-        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">12000px</span>
+        <input type="range" id="orbit-persp" min="2200" max="20000" value="16500" step="100" />
+        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">16500px</span>
       </div>
       <button type="button" class="orbit-reset" id="orbit-reset">Atur ulang</button>
     </div>

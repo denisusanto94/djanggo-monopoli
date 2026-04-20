@@ -1,10 +1,10 @@
 :root {
   --gold: #e8c547;
-  --gold-soft: rgba(232, 197, 71, 0.35);
-  --glass: rgba(255, 248, 235, 0.1);
-  --shadow: 0 20px 48px rgba(15, 8, 4, 0.55);
-  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.28);
-  --rim-light: rgba(255, 235, 200, 0.18);
+  --gold-soft: rgba(232, 197, 71, 0.38);
+  --glass: rgba(255, 248, 235, 0.12);
+  --shadow: 0 22px 52px rgba(12, 8, 6, 0.42);
+  --shadow-soft: 0 10px 36px rgba(0, 0, 0, 0.22);
+  --rim-light: rgba(255, 235, 200, 0.22);
   /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
   --line-hair: 1px;
   --line-board: 2px;
@@ -40,11 +40,11 @@
   /* Ruang ekstra vertikal agar proyeksi 3D / tepi papan tidak terpotong viewport */
   --board-size: min(94vw, calc((100dvh - clamp(1.1rem, 4.5vmin, 2.5rem)) / var(--iso-shell-height-factor)), 980px);
   /* Area permukaan / tengah (aspal) */
-  --asphalt-1: #6a6d73;
-  --asphalt-2: #55585e;
-  --asphalt-3: #3f4248;
-  --asphalt-4: #2e3035;
-  --asphalt-5: #23252a;
+  --asphalt-1: #6f7279;
+  --asphalt-2: #585b63;
+  --asphalt-3: #43464e;
+  --asphalt-4: #32343c;
+  --asphalt-5: #282a32;
   /* Gaya Let’s Get Rich / Monopoly 3D: perspektif sedikit lebih jauh agar papan besar tetap proporsional */
   --iso-perspective: 12000px;
   /* Dasar 0°: nilai X orbit = sudut miring total (bacaan panel “X”) */
@@ -92,7 +92,7 @@
 html {
   overflow-x: hidden;
   height: 100%;
-  background-color: #030201;
+  background-color: #060504;
   /* Semua rem/em mengikuti layar; lebih kecil dari default 16px */
   font-size: clamp(10px, 1.95vmin + 0.28vw, 13px);
 }
@@ -107,16 +107,17 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   font-size: 1rem;
-  line-height: 1.45;
-  color: #faf4eb;
+  line-height: 1.52;
+  color: #f7f0e8;
   text-rendering: optimizeLegibility;
-  /* Kayu di tengah layar, gradasi ke hitam di tepi (tanpa “void” kosong) */
+  /* Kayu hangat di tengah, vignette lebih lembut agar tidak “keras” di tepi */
   background:
-    radial-gradient(ellipse 140% 125% at 50% 50%, transparent 32%, rgba(0, 0, 0, 0.35) 68%, rgba(0, 0, 0, 0.92) 92%, #000000 100%),
-    radial-gradient(ellipse 95% 80% at 50% 46%, rgba(130, 95, 68, 0.55) 0%, rgba(70, 48, 32, 0.35) 45%, transparent 62%),
-    repeating-linear-gradient(88deg, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 13px),
-    repeating-linear-gradient(2deg, rgba(255, 240, 210, 0.03) 0 1px, transparent 1px 20px),
-    linear-gradient(168deg, #4a3426 0%, #2e1f14 38%, #160d08 72%, #070403 100%);
+    radial-gradient(ellipse 130% 118% at 50% 48%, transparent 36%, rgba(0, 0, 0, 0.28) 72%, rgba(0, 0, 0, 0.78) 94%, #0a0806 100%),
+    radial-gradient(ellipse 100% 88% at 50% 44%, rgba(145, 108, 78, 0.42) 0%, rgba(82, 58, 40, 0.28) 48%, transparent 64%),
+    radial-gradient(ellipse 120% 60% at 50% 0%, rgba(255, 220, 180, 0.04) 0%, transparent 42%),
+    repeating-linear-gradient(88deg, rgba(0, 0, 0, 0.045) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(2deg, rgba(255, 240, 210, 0.028) 0 1px, transparent 1px 20px),
+    linear-gradient(168deg, #4f3828 0%, #322218 40%, #18100a 74%, #0a0705 100%);
   background-attachment: fixed;
 }
 
@@ -162,6 +163,10 @@ body {
   align-items: center;
   padding-top: 0;
   padding-bottom: clamp(0.65rem, 3.5vmin, 2rem);
+  /* Cahaya lembut di belakang papan — depth tanpa mengganggu kontras petak */
+  background:
+    radial-gradient(ellipse 92% 78% at 50% 36%, rgba(88, 72, 118, 0.16) 0%, transparent 52%),
+    radial-gradient(ellipse 100% 55% at 50% 108%, rgba(0, 0, 0, 0.22) 0%, transparent 48%);
 }
 
 /* Bingkai papan kayu — lebih tinggi dari lebar agar proyeksi 3D tidak “terpotong” horizontal */
@@ -343,10 +348,10 @@ body {
   transform: translateZ(calc(var(--board-thickness) * -0.5));
   transform-style: preserve-3d;
   background:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 10px),
     linear-gradient(175deg, var(--asphalt-2) 0%, var(--asphalt-3) 48%, var(--asphalt-5) 100%);
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   pointer-events: none;
 }
 
@@ -368,23 +373,23 @@ body {
   background-color: var(--asphalt-5);
   /* Aspal abu-abu: area jalur + tengah (ROLL) */
   background-image:
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 var(--line-hair), transparent var(--line-hair) 10px),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 8px),
-    radial-gradient(ellipse 105% 100% at 48% 46%, var(--asphalt-1) 0%, var(--asphalt-3) 52%, var(--asphalt-5) 100%);
-  border: var(--line-board) solid #141518;
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.09) 0 var(--line-hair), transparent var(--line-hair) 10px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 8px),
+    radial-gradient(ellipse 105% 100% at 48% 44%, var(--asphalt-1) 0%, var(--asphalt-3) 50%, var(--asphalt-5) 100%);
+  border: var(--line-board) solid rgba(18, 20, 26, 0.92);
   /* Tepi muka aspal + “tebal” kelabu */
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -14px 28px rgba(0, 0, 0, 0.38),
-    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.4),
-    0 3px 0 #3a3c42,
-    0 6px 0 #2f3137,
-    0 9px 0 #282a2f,
-    0 12px 0 #222428,
-    0 15px 0 #1c1d22,
-    0 18px 0 #18191d,
-    0 22px 0 #121318,
-    0 26px 38px rgba(0, 0, 0, 0.5);
+    inset 0 2px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -14px 28px rgba(0, 0, 0, 0.32),
+    0 0 0 var(--line-hair) rgba(0, 0, 0, 0.32),
+    0 3px 0 #3e4048,
+    0 6px 0 #33353d,
+    0 9px 0 #2c2e35,
+    0 12px 0 #26282f,
+    0 15px 0 #202228,
+    0 18px 0 #1a1c22,
+    0 22px 0 #15161c,
+    0 26px 40px rgba(0, 0, 0, 0.42);
 }
 
 /* HUD tengah: anak .board-mass — ikut Y/Z orbit; batalkan pitch X; di depan grid (Z + z-index) */
@@ -446,7 +451,7 @@ body {
   transform-style: preserve-3d;
   pointer-events: auto;
   /* Celah tipis antar “balok” domino — selaras aspal */
-  background: linear-gradient(165deg, #25262b 0%, #15161a 100%);
+  background: linear-gradient(165deg, #2a2c32 0%, #1a1b20 100%);
   --tile-z: var(--tile-face-lift);
   --tile-z-hover: var(--tile-face-lift-hover);
 }
@@ -476,30 +481,30 @@ body {
   display: flex;
   flex-direction: column;
   transform-style: preserve-3d;
-  background: linear-gradient(168deg, #fffef9 0%, #f4ebe0 38%, #e8dfd2 72%, #ddd2c4 100%);
-  border: 1px solid rgba(32, 22, 14, 0.42);
+  background: linear-gradient(168deg, #fffefb 0%, #f6efe4 38%, #ebe2d6 72%, #e0d5c8 100%);
+  border: 1px solid rgba(42, 32, 24, 0.32);
   box-shadow:
-    inset 0 2px 4px rgba(255, 255, 255, 0.72),
-    inset 0 -4px 10px rgba(45, 30, 18, 0.16),
-    0 1px 0 rgba(255, 252, 246, 0.35),
-    0 3px 0 rgba(28, 18, 12, 0.55),
-    0 5px 0 rgba(22, 14, 10, 0.38),
-    0 8px 14px rgba(0, 0, 0, 0.28);
+    inset 0 2px 5px rgba(255, 255, 255, 0.78),
+    inset 0 -4px 10px rgba(45, 30, 18, 0.12),
+    0 1px 0 rgba(255, 252, 246, 0.42),
+    0 3px 0 rgba(32, 22, 14, 0.45),
+    0 5px 0 rgba(26, 18, 12, 0.32),
+    0 8px 16px rgba(0, 0, 0, 0.22);
   cursor: pointer;
   transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale)) translateZ(var(--tile-z, var(--tile-face-lift)));
   transform-origin: center center;
-  transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1), box-shadow 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.34, 1.15, 0.64, 1), box-shadow 0.22s ease;
 }
 
 .tile-frame:hover {
   transform: rotate(calc(45deg - var(--grid-yaw))) rotate(var(--card-turn, 0deg)) scale(var(--tile-scale-hover)) translateZ(var(--tile-z-hover, var(--tile-face-lift-hover)));
   box-shadow:
-    inset 0 2px 5px rgba(255, 255, 255, 0.78),
-    inset 0 -4px 12px rgba(45, 30, 18, 0.12),
-    0 1px 0 rgba(255, 252, 246, 0.4),
-    0 4px 0 rgba(28, 18, 12, 0.5),
-    0 7px 0 rgba(22, 14, 10, 0.32),
-    0 12px 20px rgba(0, 0, 0, 0.32);
+    inset 0 2px 6px rgba(255, 255, 255, 0.82),
+    inset 0 -4px 12px rgba(45, 30, 18, 0.1),
+    0 1px 0 rgba(255, 252, 246, 0.48),
+    0 4px 0 rgba(32, 22, 14, 0.42),
+    0 7px 0 rgba(26, 18, 12, 0.28),
+    0 12px 22px rgba(0, 0, 0, 0.26);
 }
 
 .tile-frame::after {
@@ -537,22 +542,22 @@ body {
 .tile-meta {
   padding: 0.3rem 0.36rem 0.36rem;
   text-align: center;
-  color: #120d0a;
-  line-height: 1.28;
+  color: #1c1510;
+  line-height: 1.34;
   flex-shrink: 0;
   font-size: clamp(0.52rem, 0.95vw + 0.16rem, 0.76rem);
   font-weight: 600;
   -webkit-font-smoothing: antialiased;
-  background: linear-gradient(180deg, #fffdf9 0%, #f5eee4 45%, #ebe2d6 100%);
-  border-top: 1px solid rgba(55, 38, 26, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, #fffefb 0%, #f7f0e6 46%, #ede4d8 100%);
+  border-top: 1px solid rgba(55, 42, 32, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
 }
 
 .tile-name {
   display: block;
   font-weight: 800;
-  letter-spacing: 0.025em;
-  color: #0f0a08;
+  letter-spacing: 0.022em;
+  color: #1a1410;
   overflow-wrap: break-word;
   hyphens: auto;
   text-shadow:
@@ -714,11 +719,11 @@ body {
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 14px),
     radial-gradient(ellipse 100% 92% at 50% 52%, #686058 0%, #4a4540 52%, #2e2a26 100%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -18px 44px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 0 24px rgba(232, 197, 71, 0.08),
-    0 20px 36px rgba(0, 0, 0, 0.35);
+    inset 0 2px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -18px 44px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 28px rgba(232, 197, 71, 0.07),
+    0 20px 40px rgba(0, 0, 0, 0.28);
 }
 
 .hub-brand {
@@ -909,21 +914,21 @@ body {
   width: clamp(2rem, 8vmin, 3rem);
   height: clamp(2rem, 8vmin, 3rem);
   border-radius: clamp(6px, 1.5vmin, 10px);
-  border: 1px solid rgba(55, 52, 50, 0.55);
+  border: 1px solid rgba(55, 52, 50, 0.45);
   font-size: clamp(0.72rem, 2.7vmin, 0.98rem);
   font-weight: 800;
   color: #2a2d33;
-  background: linear-gradient(158deg, #ffffff 0%, #eceae8 45%, #d8d6d4 100%);
+  background: linear-gradient(158deg, #ffffff 0%, #f0eeec 46%, #dedcd8 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.06),
-    0 3px 0 #2a2826,
-    0 6px 14px rgba(0, 0, 0, 0.3);
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+    0 3px 0 #2f2d2b,
+    0 6px 14px rgba(0, 0, 0, 0.24);
   cursor: default;
   pointer-events: auto;
   position: relative;
   z-index: 3;
-  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
 }
 
 .dice:hover {
@@ -1057,10 +1062,10 @@ body {
 .hub-hint {
   margin: 0;
   font-size: clamp(0.4rem, 1.05vmin, 0.5rem);
-  opacity: 0.9;
-  line-height: 1.28;
-  color: rgba(215, 210, 202, 0.88);
-  letter-spacing: 0.01em;
+  opacity: 0.92;
+  line-height: 1.36;
+  color: rgba(228, 222, 212, 0.9);
+  letter-spacing: 0.008em;
 }
 
 .token {
@@ -1089,39 +1094,40 @@ body {
 
 .modal {
   border: none;
-  border-radius: 18px;
+  border-radius: 22px;
   padding: 0;
   max-width: min(92vw, 380px);
   color: #1a2848;
-  background: linear-gradient(180deg, #fdfcfa 0%, #f4f0ea 100%);
+  background: linear-gradient(180deg, #fefcf8 0%, #f6f1e9 52%, #ede6dc 100%);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 24px 56px rgba(8, 12, 40, 0.35),
-    var(--shadow);
+    0 0 0 1px rgba(255, 255, 255, 0.55),
+    0 28px 64px rgba(12, 16, 42, 0.28),
+    0 12px 28px rgba(8, 10, 24, 0.12),
+    var(--shadow-soft);
 }
 
 .modal::backdrop {
-  background: rgba(6, 10, 28, 0.58);
-  backdrop-filter: blur(4px);
+  background: rgba(8, 12, 28, 0.52);
+  backdrop-filter: blur(8px);
 }
 
 .modal-form {
-  padding: 1.35rem 1.35rem 1.1rem;
+  padding: 1.45rem 1.4rem 1.15rem;
 }
 
 .modal h2 {
   margin: 0 0 0.55rem;
   font-size: clamp(0.95rem, 2.6vw, 1.05rem);
   font-weight: 800;
-  letter-spacing: 0.01em;
-  color: #0f1f42;
+  letter-spacing: 0.008em;
+  color: #142a52;
 }
 
 .modal p {
   margin: 0 0 1.1rem;
-  line-height: 1.5;
+  line-height: 1.58;
   font-size: clamp(0.78rem, 2.1vw, 0.88rem);
-  color: #2c3a55;
+  color: #364560;
 }
 
 .modal-actions {
@@ -1135,19 +1141,19 @@ body {
 .btn-primary {
   max-width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 1.2rem;
-  border-radius: 11px;
+  padding: 0.52rem 1.25rem;
+  border-radius: 12px;
   border: none;
   font-size: clamp(0.75rem, 2.1vw, 0.85rem);
   font-weight: 700;
   cursor: pointer;
   color: #fff;
-  background: linear-gradient(175deg, #3d7aff 0%, #2563eb 45%, #1d4ed8 100%);
+  background: linear-gradient(175deg, #4a82ff 0%, #2f6ceb 46%, #2258d4 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 2px 0 #1e3a8a,
-    0 6px 14px rgba(30, 64, 175, 0.35);
-  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.1s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 2px 0 #2448a8,
+    0 8px 18px rgba(30, 64, 175, 0.32);
+  transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
 }
 
 .btn-primary:hover {
@@ -1405,20 +1411,20 @@ body {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.42);
+  border: 2px solid rgba(255, 255, 255, 0.38);
   cursor: pointer;
   display: grid;
   place-items: center;
-  color: #f8f9ff;
+  color: #f4f6ff;
   background:
-    radial-gradient(circle at 30% 22%, rgba(255, 255, 255, 0.22) 0%, transparent 45%),
-    linear-gradient(155deg, #5c4a9e 0%, #3d2d72 42%, #1f1438 100%);
+    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.26) 0%, transparent 46%),
+    linear-gradient(155deg, #6554a8 0%, #44306e 44%, #241a3c 100%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.25),
-    0 0 0 1px rgba(0, 0, 0, 0.25),
-    0 5px 0 #0f0a1c,
-    0 14px 28px rgba(0, 0, 0, 0.5);
-  transition: transform 0.15s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.15s ease;
+    inset 0 2px 0 rgba(255, 255, 255, 0.28),
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 5px 0 #120e22,
+    0 16px 32px rgba(0, 0, 0, 0.38);
+  transition: transform 0.18s cubic-bezier(0.34, 1.35, 0.64, 1), box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .orbit-fab:hover {
@@ -1446,18 +1452,18 @@ body {
 
 .orbit-panel {
   width: min(300px, calc(100vw - 2rem));
-  padding: 1rem 1.1rem 1.05rem;
-  border-radius: 16px;
-  color: #eef1fa;
+  padding: 1.05rem 1.15rem 1.1rem;
+  border-radius: 18px;
+  color: #eef0fa;
   background:
-    linear-gradient(180deg, rgba(90, 78, 140, 0.35) 0%, transparent 38%),
-    linear-gradient(165deg, rgba(36, 30, 56, 0.98), rgba(14, 11, 26, 0.99));
-  border: 1px solid rgba(255, 255, 255, 0.14);
+    linear-gradient(180deg, rgba(100, 88, 150, 0.38) 0%, transparent 40%),
+    linear-gradient(165deg, rgba(40, 34, 62, 0.97), rgba(18, 14, 32, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 20px 48px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 22px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(18px) saturate(1.08);
 }
 
 .orbit-panel[hidden] {
@@ -1465,20 +1471,20 @@ body {
 }
 
 .orbit-panel__title {
-  margin: 0 0 0.3rem;
+  margin: 0 0 0.35rem;
   font-size: clamp(0.82rem, 2.4vw, 0.92rem);
   font-weight: 800;
-  letter-spacing: 0.03em;
-  color: #f8f6ff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  letter-spacing: 0.028em;
+  color: #faf8ff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.38);
 }
 
 .orbit-panel__hint {
   margin: 0 0 0.85rem;
   font-size: clamp(0.62rem, 1.65vmin, 0.68rem);
-  opacity: 0.82;
-  line-height: 1.4;
-  color: rgba(230, 234, 250, 0.88);
+  opacity: 0.88;
+  line-height: 1.48;
+  color: rgba(235, 238, 252, 0.9);
 }
 
 .orbit-joystick-wrap {

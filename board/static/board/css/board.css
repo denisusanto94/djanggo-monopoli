@@ -8,13 +8,13 @@
   /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
   --line-hair: 1px;
   --line-board: 2px;
-  /* Jarak antar sel petak — rapat; diamond bisa override */
-  --grid-gap: clamp(2px, 0.38vmin, 5px);
+  /* Jarak antar sel petak — diamond bisa override */
+  --grid-gap: clamp(4px, 0.72vmin, 12px);
   --board-inset: 0px;
   --radius-board-field: 18px;
-  /* Sudut balok domino; slot sedikit lebih besar dari muka */
-  --radius-tile-slot: 10px;
-  --radius-tile-face: 8px;
+  /* Sudut balok domino; sedikit lebih besar mengikuti petak */
+  --radius-tile-slot: 11px;
+  --radius-tile-face: 9px;
   --radius-hub-widget: 8px;
   --ring-active: 2px;
   --tile-radius: var(--radius-tile-face);
@@ -60,9 +60,9 @@
   /* Skala kartu lebih besar (HD); overflow sel tetap memotong sudut */
   --tile-scale: 1;
   --tile-scale-hover: 1;
-  /* Kedalaman petak di Z — LGR: agak rendah agar muka petak sejajar & teks lebih terbaca */
-  --tile-face-lift: 6px;
-  --tile-face-lift-hover: 10px;
+  /* Kedalaman petak di Z — sedikit lebih tinggi agar muka petak lebih menonjol */
+  --tile-face-lift: 10px;
+  --tile-face-lift-hover: 14px;
   /* Palet kayu */
   --wood-frame-1: #7a5538;
   --wood-frame-2: #4d3422;
@@ -211,39 +211,34 @@ body {
 }
 
 /*
- * Diamond: --board-size dihitung ulang di subtree ini (lebih besar, ikut layar).
- * min(lebar aman, tinggi aman / 1.02, plafon vmin & px) — disesuaikan setelah petak diperbesar.
+ * Diamond: papan persegi sebesar mungkin di viewport (aman notch); petak diperbesar.
  */
 .board-shell.board-shell--diamond {
-  /* HUD di lubang tengah; petak dirapatkan (gap + inset + skala) */
+  /* Lubang tengah aspal sedikit lebih lebar (rasio ~14:12); jarak antar petak + skala aman overlap */
+  --board-mid-inset-x: 12%;
+  --board-mid-inset-y: 10.4%;
+  /* Selaras :root — dihitung ulang agar HUD ikut inset baru */
+  --hub-asphalt-max-w: calc(100% - 2 * var(--board-mid-inset-x) - clamp(0.35rem, 1.8vw, 0.85rem));
+  --hub-asphalt-max-h: calc(100% - 2 * var(--board-mid-inset-y) - clamp(0.35rem, 1.6vmin, 0.75rem));
+  --hub-float-width: min(var(--hub-asphalt-max-w), clamp(8.5rem, 36vmin, 19rem));
+  --hub-float-max-height: min(var(--hub-asphalt-max-h), 44vmin, 19rem);
   --hub-float-nudge-y: clamp(2.35rem, 9.2vmin, 5.85rem);
-  --grid-gap: clamp(2px, 0.32vmin, 5px);
-  --board-inset: clamp(0px, 0.12vmin, 2px);
+  /* Jarak antar petak (gap grid) */
+  --grid-gap: clamp(4px, 0.65vmin, 10px);
+  --board-inset: 0px;
+  /* Persegi maksimal (dynamic viewport); @supports di bawah bisa naik ke large viewport */
   --board-size: min(
-    min(
-      99.6vw,
-      calc(
-        100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) -
-          clamp(0.1rem, 0.85vw, 0.42rem)
-      )
-    ),
-    calc(
-      (
-          100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) -
-            clamp(0.28rem, 1.55vmin, 0.85rem)
-        ) / 1.02
-    ),
-    min(99vmin, 1420px)
+    calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+    calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
   );
-  /* Skala dalam sel — gap sudah rapat; sedikit ruang anti-overlap di sudut */
-  --tile-scale: 0.985;
-  --tile-scale-hover: 1.04;
+  --tile-scale: 1.095;
+  --tile-scale-hover: 1.14;
   position: relative;
-  margin-top: -4%;
+  margin: 0 auto;
   width: min(var(--board-size), 100%);
   aspect-ratio: 1;
   height: auto;
-  max-width: 100%;
+  max-width: min(var(--board-size), 100%);
   align-items: center;
   justify-content: center;
   overflow: visible;
@@ -257,6 +252,15 @@ body {
   backdrop-filter: none;
 }
 
+@supports (height: 100lvh) {
+  .board-shell.board-shell--diamond {
+    --board-size: min(
+      calc(100lvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      calc(100lvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+    );
+  }
+}
+
 /* Diamond: papan 3D memakai penuh kotak pivot → sel grid / petak lebih lebar */
 .board-shell.board-shell--diamond .board-tilt {
   width: 100%;
@@ -264,26 +268,26 @@ body {
 }
 
 .board-shell.board-shell--diamond .tile {
-  padding: 1px;
+  padding: clamp(0px, 0.26vmin, 3px);
 }
 
 .board-shell.board-shell--diamond .tile[data-tile-code="start"],
 .board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
 .board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
-  --tile-scale: 1;
-  --tile-scale-hover: 1.05;
-  padding: clamp(2px, 0.42vmin, 5px);
+  --tile-scale: 1.16;
+  --tile-scale-hover: 1.21;
+  padding: clamp(2px, 0.38vmin, 5px);
 }
 
-/* Petak jalur: sumbu domino sedikit lebih pendek bila gap rapat */
+/* Petak jalur: domino lebih panjang, selaras skala baru */
 .board-shell.board-shell--diamond .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.2;
+  --tile-stretch-y: 1.5;
 }
 
 .board-shell.board-shell--diamond .tile-meta {
-  font-size: clamp(0.52rem, 1.05vw + 0.18rem, 0.78rem);
-  padding: 0.28rem 0.34rem 0.34rem;
+  font-size: clamp(0.62rem, 1.25vw + 0.24rem, 0.96rem);
+  padding: 0.36rem 0.42rem 0.42rem;
 }
 
 .board-shell.board-shell--diamond .board-pivot {
@@ -485,7 +489,6 @@ body {
   min-height: 0;
   display: block;
   box-sizing: border-box;
-  padding: 1px;
   overflow: visible;
   border-radius: var(--radius-tile-slot);
   transform-style: preserve-3d;
@@ -495,6 +498,8 @@ body {
   cursor: pointer;
   /* Celah tipis antar “balok” domino — selaras aspal */
   background: linear-gradient(165deg, #2a2c32 0%, #1a1b20 100%);
+  /* Jarak halus antara tepi sel dan .tile-frame */
+  padding: clamp(2px, 0.4vmin, 5px);
   --tile-z: var(--tile-face-lift);
   --tile-z-hover: var(--tile-face-lift-hover);
   /* Pemanjang vertikal default; pojok/khusus override ke 1 */
@@ -503,7 +508,7 @@ body {
 
 /* Tinggi petak jalur (sumbu domino); bukan Mulai / Pulau Terpencil / Piala Dunia Marmer / Keliling Dunia */
 .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.36;
+  --tile-stretch-y: 1.5;
 }
 
 /*
@@ -515,13 +520,13 @@ body {
 .tile[data-tile-code="marble_cup"],
 .tile[data-tile-code="world_tour"] {
   --tile-stretch-y: 1;
-  --tile-scale: 1.05;
-  --tile-scale-hover: 1.1;
+  --tile-scale: 1.13;
+  --tile-scale-hover: 1.18;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(2px, 0.42vmin, 5px);
+  padding: clamp(3px, 0.48vmin, 7px);
   box-sizing: border-box;
 }
 
@@ -637,7 +642,7 @@ body {
 }
 
 .board-shell.board-shell--diamond .tile-index-shadow {
-  font-size: clamp(0.4rem, 0.95vmin + 0.22rem, 0.68rem);
+  font-size: clamp(0.46rem, 1.02vmin + 0.24rem, 0.76rem);
   padding: 0.08em 0.18em 0.1em;
   border-radius: 4px;
 }
@@ -680,6 +685,7 @@ body {
 
 .tile-name {
   display: block;
+  font-size: 7px;
   font-weight: 800;
   letter-spacing: 0.022em;
   color: #1a1410;
@@ -693,7 +699,7 @@ body {
 .tile-price {
   display: block;
   margin-top: 0.1rem;
-  font-size: clamp(0.52em, 0.82vw + 0.16em, 0.82em);
+  font-size: 6px;
   color: #2c1c12;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -734,7 +740,7 @@ body {
 
 .tile--start .tile-name::after {
   content: " \2191";
-  font-size: 0.85em;
+  font-size: 7px;
   opacity: 0.9;
 }
 
@@ -1377,18 +1383,18 @@ body {
     font-size: clamp(11px, 2.5vmin + 0.48vw, 15px);
   }
 
-  /* Font petak tetap 5px di ponsel (tidak ikut html rem) */
+  /* Petak diamond: sedikit lebih besar dari 5px agar proporsional papan besar */
   .board-shell.board-shell--diamond .tile-meta {
-    font-size: 5px;
-    padding: 0.3rem 0.36rem 0.38rem;
+    font-size: clamp(6px, 2.65vmin, 10px);
+    padding: 0.32rem 0.38rem 0.4rem;
   }
 
   .tile-meta {
-    font-size: 5px;
+    font-size: clamp(6px, 2.65vmin, 10px);
   }
 
   .tile-price {
-    font-size: 5px;
+    font-size: 6px;
   }
 
   .board-hub-float .btn-parity--lgr {
@@ -1514,17 +1520,16 @@ body {
     font-size: clamp(10.75px, 1.85vmin + 0.32vw, 13.5px);
   }
 
-  /* Font petak tetap 5px di tablet */
   .board-shell.board-shell--diamond .tile-meta {
-    font-size: 5px;
+    font-size: clamp(6.5px, 2.4vmin, 11px);
   }
 
   .tile-meta {
-    font-size: 5px;
+    font-size: clamp(6.5px, 2.4vmin, 11px);
   }
 
   .tile-price {
-    font-size: 5px;
+    font-size: 6px;
   }
 
   .board-hub-float .btn-parity--lgr {

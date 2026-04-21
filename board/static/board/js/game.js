@@ -117,29 +117,31 @@
     }
   });
 
-  /* 3D + pointer-events: lubang tengah — cadangan hit-test lewat rect layar */
+  /*
+   * Cadangan hit HUD di capture: getBoundingClientRect + padding pada elemen 3D
+   * menghasilkan AABB sangat lebar sehingga “mencuri” pointerdown ke petak (mis. 11–24).
+   * elementsFromPoint mengabaikan pointer-events:none dan mengikuti tumpukan nyata.
+   */
   const boardMass = el("board-mass");
-  const HIT_PAD = 28;
-  function rectHit(node, x, y) {
-    if (!node) return false;
-    const r = node.getBoundingClientRect();
-    if (!r.width && !r.height) return false;
-    return (
-      x >= r.left - HIT_PAD &&
-      x <= r.right + HIT_PAD &&
-      y >= r.top - HIT_PAD &&
-      y <= r.bottom + HIT_PAD
-    );
-  }
+  const boardHubFloat = el("board-hub-float");
   function hubPickAtClient(x, y) {
-    if (rectHit(btnGanjil, x, y)) return "ganjil";
-    if (rectHit(btnGenap, x, y)) return "genap";
-    if (rectHit(btnRoll, x, y)) return "roll";
-    if (rectHit(dieA, x, y) || rectHit(dieB, x, y)) return "roll";
+    const stack = document.elementsFromPoint(x, y);
+    for (const raw of stack) {
+      if (!(raw instanceof Element)) continue;
+      if (raw.closest(".tile")) return null;
+      if (!boardHubFloat?.contains(raw)) continue;
+      const btn = raw.closest("button");
+      if (!btn || !boardHubFloat.contains(btn)) continue;
+      if (btn === btnGanjil) return "ganjil";
+      if (btn === btnGenap) return "genap";
+      if (btn === btnRoll) return "roll";
+      if (btn === dieA || btn === dieB) return "roll";
+    }
     return null;
   }
   function onBoardMassPointerDownCapture(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.target instanceof Element && e.target.closest(".tile")) return;
     const hit = hubPickAtClient(e.clientX, e.clientY);
     if (!hit) return;
     e.stopPropagation();

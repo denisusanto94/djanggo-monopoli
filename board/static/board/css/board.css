@@ -31,7 +31,7 @@
   --hub-asphalt-max-h: calc(100% - 2 * var(--board-mid-inset-y) - clamp(0.35rem, 1.6vmin, 0.75rem));
   --hub-float-width: min(var(--hub-asphalt-max-w), clamp(7.75rem, 33vmin, 17rem));
   --hub-float-max-height: min(var(--hub-asphalt-max-h), 40vmin, 17rem);
-  /* Geser HUD ke bawah (relatif titik tengah papan) */
+  /* Geser HUD ke bawah (relatif titik tengah papan) — diamond override lebih besar */
   --hub-float-nudge-y: clamp(0.65rem, 2.6vmin, 1.45rem);
   /* Fine-tune arah wajik di layar; 0° = default (Mulai di grid 9,1) */
   --grid-yaw: 0deg;
@@ -214,6 +214,10 @@ body {
  * min(lebar aman, tinggi aman / 1.02, plafon vmin & px) — disesuaikan setelah petak diperbesar.
  */
 .board-shell.board-shell--diamond {
+  /* HUD lebih rendah di lubang tengah; jarak petak lebih lega; skala sedikit turun agar tidak overlap */
+  --hub-float-nudge-y: clamp(2.35rem, 9.2vmin, 5.85rem);
+  --grid-gap: clamp(6px, 1.05vmin, 12px);
+  --board-inset: clamp(2px, 0.35vmin, 5px);
   --board-size: min(
     min(
       99.6vw,
@@ -230,9 +234,9 @@ body {
     ),
     min(99vmin, 1420px)
   );
-  /* Skala moderat — tetap di dalam sel + gap, hindari overlap antar petak */
-  --tile-scale: 1.04;
-  --tile-scale-hover: 1.08;
+  /* Skala di dalam sel + gap lebar — hindari overlap di sudut wajik */
+  --tile-scale: 0.96;
+  --tile-scale-hover: 1.03;
   position: relative;
   margin-top: -4%;
   width: min(var(--board-size), 100%);
@@ -267,9 +271,14 @@ body {
 .board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
 .board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
-  --tile-scale: 1.12;
-  --tile-scale-hover: 1.2;
-  padding: clamp(3px, 0.5vmin, 6px);
+  --tile-scale: 1;
+  --tile-scale-hover: 1.06;
+  padding: clamp(4px, 0.65vmin, 8px);
+}
+
+/* Petak jalur: sedikit pendek di sumbu domino agar pojok tidak “nabrak” */
+.board-shell.board-shell--diamond .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
+  --tile-stretch-y: 1.28;
 }
 
 .board-shell.board-shell--diamond .tile-meta {
@@ -430,12 +439,24 @@ body {
     rotate(calc(-45deg + var(--grid-yaw)))
     translateZ(calc(var(--board-thickness) * 0.42 + 3px + 16px + var(--hub-lift)));
   transform-style: preserve-3d;
-  pointer-events: auto;
+  /*
+   * Kotak posisi HUD lebar; setelah transform 3D bounding hit-test membesar dan
+   * menutupi petak jalur (mis. atas/kanan). Hanya kontrol nyata yang menangkap pointer.
+   */
+  pointer-events: none;
   isolation: isolate;
 }
 
-.board-hub-float .hub {
+.board-hub-float .hub,
+.board-hub-float .hub-inner {
+  pointer-events: none;
+}
+
+.board-hub-float button {
   pointer-events: auto;
+}
+
+.board-hub-float .hub {
   flex-shrink: 1;
   min-width: 0;
   max-width: 100%;
@@ -446,8 +467,13 @@ body {
 .board-hub-float .hub-arc__center {
   position: relative;
   z-index: 3;
-  /* Tarik kolom dadu+ROLL ke arah Ganjil / Genap */
-  margin-inline: clamp(-0.22rem, -1.6cqw, -0.04rem);
+  margin-inline: 0;
+}
+
+/* Tombol ganjil/genap disembunyikan — tetap di DOM untuk skrip yang opsional */
+.board-hub-float #btn-ganjil,
+.board-hub-float #btn-genap {
+  display: none;
 }
 
 /* path_line: 1=bawah…, 2=kiri…, 3=atas…, 4=kanan… — sudut kartu --card-turn di board/tiles.py */
@@ -575,6 +601,41 @@ body {
     transparent 58%,
     rgba(50, 32, 20, 0.05) 100%
   );
+}
+
+/* Nomor urut petak (1…N) — bayangan tebal agar terbaca di atas ilustrasi */
+.tile-index-shadow {
+  position: absolute;
+  top: 0.14rem;
+  right: 0.14rem;
+  z-index: 5;
+  padding: 0.1em 0.24em 0.12em;
+  border-radius: 5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  font-size: clamp(0.52rem, 1.35vmin + 0.32rem, 0.85rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fffef8;
+  pointer-events: none;
+  background: rgba(8, 6, 5, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.95),
+    0 2px 0 rgba(0, 0, 0, 0.72),
+    0 3px 6px rgba(0, 0, 0, 0.65),
+    0 0 12px rgba(0, 0, 0, 0.45);
+}
+
+.tile-frame:has(.tile-strip) .tile-index-shadow {
+  top: calc(9px + 0.16rem);
+}
+
+.board-shell.board-shell--diamond .tile-index-shadow {
+  font-size: clamp(0.4rem, 0.95vmin + 0.22rem, 0.68rem);
+  padding: 0.08em 0.18em 0.1em;
+  border-radius: 4px;
 }
 
 .tile-strip {
@@ -885,19 +946,33 @@ body {
   max-width: 100%;
   min-width: 0;
   flex-shrink: 1;
-  gap: clamp(0.1rem, 1vmin, 0.26rem);
+  gap: clamp(0.14rem, 1.15vmin, 0.32rem);
   max-height: 100%;
+  padding: clamp(0.32rem, 1.5vmin, 0.62rem) clamp(0.42rem, 2vmin, 0.85rem);
+  border-radius: clamp(12px, 2.8cqw, 18px);
+  background:
+    radial-gradient(ellipse 95% 70% at 50% 0%, rgba(255, 255, 255, 0.1), transparent 55%),
+    linear-gradient(168deg, rgba(34, 36, 44, 0.72) 0%, rgba(18, 20, 26, 0.55) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(6px);
 }
 
 .hub-timer {
   width: 100%;
   padding: 0.32rem 0.45rem;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.18));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.16));
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: clamp(0.52rem, 1.35vmin, 0.58rem);
   color: rgba(238, 234, 228, 0.92);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 14px rgba(0, 0, 0, 0.22);
 }
 
 .hub-timer__label {
@@ -1089,6 +1164,7 @@ body {
 /* Hub: tombol & teks mengikuti lebar kotak (cqw), supaya tidak melampaui .board-hub-float */
 .board-hub-float .hub-arc {
   align-items: center;
+  justify-content: center;
   gap: 0;
 }
 
@@ -1120,6 +1196,12 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-radius: clamp(7px, 1.6vmin, 11px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.06),
+    0 4px 0 #252320,
+    0 8px 18px rgba(0, 0, 0, 0.32);
 }
 
 .board-hub-float .btn-roll--main {
@@ -1133,6 +1215,13 @@ body {
   padding: 0 0.12em;
   overflow: hidden;
   letter-spacing: 0.03em;
+  box-shadow:
+    inset 0 4px 12px rgba(255, 255, 255, 0.48),
+    inset 0 -12px 20px rgba(70, 8, 50, 0.35),
+    0 0 0 1px rgba(255, 210, 235, 0.28),
+    0 5px 0 #5c1745,
+    0 14px 32px rgba(0, 0, 0, 0.45),
+    0 0 48px rgba(255, 100, 180, 0.22);
 }
 
 .board-hub-float .hub-timer {
@@ -1150,6 +1239,8 @@ body {
   max-width: 100%;
   overflow-wrap: anywhere;
   font-size: clamp(0.36rem, min(0.92vmin, 2.4cqw), 0.46rem);
+  color: rgba(236, 230, 220, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .hub-hint {

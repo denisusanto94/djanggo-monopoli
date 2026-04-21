@@ -27,6 +27,7 @@
             style="grid-row: {{ t.grid_row }}; grid-column: {{ t.grid_col }}; --card-turn: {{ t.card_turn_deg|floatformat:0 }}deg;"
           >
             <div class="tile-frame">
+              <span class="tile-index-shadow" aria-hidden="true">{{ t.index|add:1 }}</span>
               {% if t.color %}
               <div class="tile-strip" style="--strip: {{ t.color }}"></div>
               {% endif %}
@@ -58,8 +59,8 @@
                 <span class="hub-timer__label">Batas waktu</span>
                 <span class="hub-timer__value">—</span>
               </div>
-              <div class="hub-arc" role="group" aria-label="Dadu dan ganjil genap">
-                <button type="button" class="btn-parity btn-parity--lgr" id="btn-ganjil">Ganjil</button>
+              <div class="hub-arc" role="group" aria-label="Dadu dan lempar">
+                <button type="button" class="btn-parity btn-parity--lgr" id="btn-ganjil" tabindex="-1" aria-hidden="true">Ganjil</button>
                 <div class="hub-arc__center">
                   <div class="dice-row">
                     <button type="button" class="dice" id="die-a" aria-label="Dadu A">?</button>
@@ -67,7 +68,7 @@
                   </div>
                   <button type="button" class="btn-roll btn-roll--main" id="btn-roll">ROLL</button>
                 </div>
-                <button type="button" class="btn-parity btn-parity--lgr" id="btn-genap">Genap</button>
+                <button type="button" class="btn-parity btn-parity--lgr" id="btn-genap" tabindex="-1" aria-hidden="true">Genap</button>
               </div>
               <p class="hub-hint">Klik petak untuk detail. Dari Mulai: naik kiri, atas, kanan turun, bawah kanan→kiri.</p>
             </div>

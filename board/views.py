@@ -21,6 +21,8 @@ def board(request):
             "asset": t.asset_file,
             "path_line": t.path_line,
             "card_turn_deg": t.card_turn_deg,
+            "grid_row": t.grid_row,
+            "grid_col": t.grid_col,
         }
         for t in TILES
     ]

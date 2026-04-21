@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030201">
   <title>Monopoli Game</title>
-  <link rel="stylesheet" href="{% static 'board/css/board.css' %}">
+  <link rel="stylesheet" href="{% static 'board/css/board.css' %}?v=20260422c">
 </head>
 <body>
   <div class="app">
@@ -24,12 +24,11 @@
             data-index="{{ t.index }}"
             data-path-line="{{ t.path_line }}"
             data-tile-code="{{ t.code }}"
-            style="grid-row: {{ t.grid_row }}; grid-column: {{ t.grid_col }}; --card-turn: {{ t.card_turn_deg|floatformat:0 }}deg;"
           >
             <div class="tile-frame">
               <span class="tile-index-shadow" aria-hidden="true">{{ t.index|add:1 }}</span>
               {% if t.color %}
-              <div class="tile-strip" style="--strip: {{ t.color }}"></div>
+              <div class="tile-strip"></div>
               {% endif %}
               <img
                 class="tile-art"
@@ -38,6 +37,7 @@
                 width="160"
                 height="160"
                 loading="lazy"
+                draggable="false"
               >
               <div class="tile-meta">
                 <span class="tile-name">{{ t.name }}</span>
@@ -123,14 +123,14 @@
         </div>
         <div class="orbit-joystick-readout orbit-joystick-readout--3" aria-live="polite">
           <span id="orbit-read-yaw">Y: 0°</span>
-          <span id="orbit-read-pitch">X: 38°</span>
+          <span id="orbit-read-pitch">X: 50°</span>
           <span id="orbit-read-roll">Z: 0°</span>
         </div>
       </div>
       <div class="orbit-field">
         <label class="orbit-label" for="orbit-persp">Perspektif</label>
-        <input type="range" id="orbit-persp" min="2200" max="20000" value="16500" step="100" />
-        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">16500px</span>
+        <input type="range" id="orbit-persp" min="2200" max="20000" value="2200" step="100" />
+        <span class="orbit-value" id="orbit-persp-val" aria-hidden="true">2200px</span>
       </div>
       <button type="button" class="orbit-reset" id="orbit-reset">Atur ulang</button>
     </div>
@@ -157,6 +157,6 @@
   </div>
 
   <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>
-  <script src="{% static 'board/js/game.js' %}"></script>
+  <script src="{% static 'board/js/game.js' %}?v=20260422a"></script>
 </body>
 </html>

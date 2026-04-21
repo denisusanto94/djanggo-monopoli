@@ -8,8 +8,8 @@
   /* Garis & ritme satu set — sama tiap sisi / tiap baris grid */
   --line-hair: 1px;
   --line-board: 2px;
-  /* Jarak antar sel petak — cukup lebar agar tidak tumpang tindih saat skala / 3D */
-  --grid-gap: clamp(3px, 0.65vmin, 7px);
+  /* Jarak antar sel petak — rapat; diamond bisa override */
+  --grid-gap: clamp(2px, 0.38vmin, 5px);
   --board-inset: 0px;
   --radius-board-field: 18px;
   /* Sudut balok domino; slot sedikit lebih besar dari muka */
@@ -37,23 +37,22 @@
   --grid-yaw: 0deg;
   /* Bingkai kayu lebih tinggi dari lebar papan (proyeksi 3D) */
   --iso-shell-height-factor: 1.24;
-  /* Papan mengikuti lebar & tinggi layar (ruang untuk HUD + aman) */
-  /* Ruang ekstra vertikal agar proyeksi 3D / tepi papan tidak terpotong viewport */
-  --board-size: min(96vw, calc((100dvh - clamp(1rem, 4.2vmin, 2.35rem)) / var(--iso-shell-height-factor)), 1040px);
+  /* Papan mengikuti lebar layar; gunakan 96vw sebagai acuan utama agar bisa di-scroll vertikal */
+  --board-size: min(96vw, 1040px);
   /* Area permukaan / tengah (aspal) */
   --asphalt-1: #6f7279;
   --asphalt-2: #585b63;
   --asphalt-3: #43464e;
   --asphalt-4: #32343c;
   --asphalt-5: #282a32;
-  /* LGR-style: perspektif jauh = foreshortening ringan, semua petak lebih terbaca */
-  --iso-perspective: 16500px;
+  /* Default perspektif 2200px selaras dengan JS DEFAULT_ORBIT_PERSP */
+  --iso-perspective: 2200px;
   /* Dasar 0°: nilai X orbit = sudut miring total (bacaan panel “X”) */
   --iso-rotate-x: 0deg;
   /* Geser vertikal halus setelah perspective() — sedikit naik agar diamond tidak “tenggelam” bawah */
   --iso-view-nudge-y: 0.45%;
-  /* Orbit live (JS → <html>): Euler Y / X / Z pada .board-mass — default ~LGR: pitch moderat */
-  --board-3d-x-extra: 38deg;
+  /* Default pitch 50° selaras dengan JS DEFAULT_ORBIT_PITCH */
+  --board-3d-x-extra: 50deg;
   --board-3d-y: 0deg;
   --board-3d-z: 0deg;
   /* Jarak muka papan ↔ sisi bawah — lebih tebal agar 3D terbaca jelas */
@@ -93,7 +92,7 @@
 
 html {
   overflow-x: hidden;
-  height: 100%;
+  /* Hapus height:100% agar body bisa scroll */
   background-color: #060504;
   /* Semua rem/em mengikuti layar; lebih kecil dari default 16px */
   font-size: clamp(10px, 1.95vmin + 0.28vw, 13px);
@@ -103,7 +102,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  height: 100%;
+  /* Hapus height:100% — biarkan body tumbuh mengikuti konten agar bisa di-scroll */
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -128,7 +127,8 @@ body {
   width: 100%;
   max-width: none;
   flex: 1;
-  min-height: 0;
+  /* Izinkan .app tumbuh mengikuti konten (tidak dikunci 0) */
+  min-height: min-content;
   margin: 0;
   padding-top: max(0.2rem, env(safe-area-inset-top, 0px));
   padding-bottom: max(0.2rem, env(safe-area-inset-bottom, 0px));
@@ -145,7 +145,8 @@ body {
 
 .stage {
   flex: 1;
-  min-height: 0;
+  /* Izinkan .stage tumbuh mengikuti konten */
+  min-height: min-content;
   width: 100%;
   max-width: 100%;
   display: flex;
@@ -214,10 +215,10 @@ body {
  * min(lebar aman, tinggi aman / 1.02, plafon vmin & px) — disesuaikan setelah petak diperbesar.
  */
 .board-shell.board-shell--diamond {
-  /* HUD lebih rendah di lubang tengah; jarak petak lebih lega; skala sedikit turun agar tidak overlap */
+  /* HUD di lubang tengah; petak dirapatkan (gap + inset + skala) */
   --hub-float-nudge-y: clamp(2.35rem, 9.2vmin, 5.85rem);
-  --grid-gap: clamp(6px, 1.05vmin, 12px);
-  --board-inset: clamp(2px, 0.35vmin, 5px);
+  --grid-gap: clamp(2px, 0.32vmin, 5px);
+  --board-inset: clamp(0px, 0.12vmin, 2px);
   --board-size: min(
     min(
       99.6vw,
@@ -234,9 +235,9 @@ body {
     ),
     min(99vmin, 1420px)
   );
-  /* Skala di dalam sel + gap lebar — hindari overlap di sudut wajik */
-  --tile-scale: 0.96;
-  --tile-scale-hover: 1.03;
+  /* Skala dalam sel — gap sudah rapat; sedikit ruang anti-overlap di sudut */
+  --tile-scale: 0.985;
+  --tile-scale-hover: 1.04;
   position: relative;
   margin-top: -4%;
   width: min(var(--board-size), 100%);
@@ -263,8 +264,7 @@ body {
 }
 
 .board-shell.board-shell--diamond .tile {
-  /* Selaras petak lain: inset kecil dalam sel + gap grid */
-  padding: 2px;
+  padding: 1px;
 }
 
 .board-shell.board-shell--diamond .tile[data-tile-code="start"],
@@ -272,13 +272,13 @@ body {
 .board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
   --tile-scale: 1;
-  --tile-scale-hover: 1.06;
-  padding: clamp(4px, 0.65vmin, 8px);
+  --tile-scale-hover: 1.05;
+  padding: clamp(2px, 0.42vmin, 5px);
 }
 
-/* Petak jalur: sedikit pendek di sumbu domino agar pojok tidak “nabrak” */
+/* Petak jalur: sumbu domino sedikit lebih pendek bila gap rapat */
 .board-shell.board-shell--diamond .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.28;
+  --tile-stretch-y: 1.2;
 }
 
 .board-shell.board-shell--diamond .tile-meta {
@@ -447,13 +447,14 @@ body {
   isolation: isolate;
 }
 
-.board-hub-float .hub,
-.board-hub-float .hub-inner {
-  pointer-events: none;
+/* PAKSA semua anak HUD menjadi tak-tersentuh oleh kursor */
+.board-hub-float * {
+  pointer-events: none !important;
 }
 
+/* KECUALI tombol-tombol yang memang harus bisa diklik */
 .board-hub-float button {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 .board-hub-float .hub {
@@ -484,11 +485,14 @@ body {
   min-height: 0;
   display: block;
   box-sizing: border-box;
-  padding: 2px;
+  padding: 1px;
   overflow: visible;
   border-radius: var(--radius-tile-slot);
   transform-style: preserve-3d;
   pointer-events: auto;
+  touch-action: manipulation;
+  /* Cursor pointer muncul walau parent pakai pointer-events:none */
+  cursor: pointer;
   /* Celah tipis antar “balok” domino — selaras aspal */
   background: linear-gradient(165deg, #2a2c32 0%, #1a1b20 100%);
   --tile-z: var(--tile-face-lift);
@@ -499,7 +503,7 @@ body {
 
 /* Tinggi petak jalur (sumbu domino); bukan Mulai / Pulau Terpencil / Piala Dunia Marmer / Keliling Dunia */
 .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.44;
+  --tile-stretch-y: 1.36;
 }
 
 /*
@@ -511,13 +515,13 @@ body {
 .tile[data-tile-code="marble_cup"],
 .tile[data-tile-code="world_tour"] {
   --tile-stretch-y: 1;
-  --tile-scale: 1.08;
-  --tile-scale-hover: 1.14;
+  --tile-scale: 1.05;
+  --tile-scale-hover: 1.1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: clamp(3px, 0.55vmin, 7px);
+  padding: clamp(2px, 0.42vmin, 5px);
   box-sizing: border-box;
 }
 
@@ -641,6 +645,7 @@ body {
 .tile-strip {
   height: 9px;
   flex-shrink: 0;
+  cursor: pointer;
   background: var(--strip, transparent);
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
 }
@@ -652,6 +657,9 @@ body {
   object-fit: cover;
   object-position: center;
   image-rendering: auto;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
   background: linear-gradient(180deg, #ebe4d8, #f7f2ea);
 }
 
@@ -664,6 +672,7 @@ body {
   font-size: clamp(0.52rem, 0.95vw + 0.16rem, 0.76rem);
   font-weight: 600;
   -webkit-font-smoothing: antialiased;
+  cursor: pointer;
   background: linear-gradient(180deg, #fffefb 0%, #f7f0e6 46%, #ede4d8 100%);
   border-top: 1px solid rgba(55, 42, 32, 0.12);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
@@ -1580,13 +1589,13 @@ body {
   }
 }
 
-/* Kontrol orbit 3D — pojok kanan bawah */
+/* Kontrol orbit 3D — pojok kanan bawah (disembunyikan) */
 .orbit-dock {
   position: fixed;
   right: max(0.75rem, env(safe-area-inset-right, 0px));
   bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
   z-index: 10050;
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;

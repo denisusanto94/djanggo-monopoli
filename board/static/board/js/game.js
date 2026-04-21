@@ -2,6 +2,15 @@
   const el = (id) => document.getElementById(id);
   const tiles = JSON.parse(el("tiles-data").textContent);
   const grid = el("board-grid");
+
+  for (const t of tiles) {
+    const cell = document.querySelector(`.tile[data-index="${t.index}"]`);
+    if (!cell) continue;
+    cell.style.gridRow = String(t.grid_row);
+    cell.style.gridColumn = String(t.grid_col);
+    cell.style.setProperty("--card-turn", `${Math.round(Number(t.card_turn_deg) || 0)}deg`);
+    if (t.color) cell.style.setProperty("--strip", t.color);
+  }
   const token = el("token");
   const dieA = el("die-a");
   const dieB = el("die-b");
@@ -29,7 +38,8 @@
   function openModal(t) {
     modalTitle.textContent = t.name;
     modalBody.textContent = describeTile(t);
-    if (typeof modal.showModal === "function") modal.showModal();
+    /* showModal() pada dialog yang sudah open = InvalidStateError (mis. klik petak saat gerak token) */
+    if (typeof modal.showModal === "function" && !modal.open) modal.showModal();
   }
 
   function setActive(index) {
@@ -118,58 +128,90 @@
   });
 
   /*
-   * Cadangan hit HUD di capture: getBoundingClientRect + padding pada elemen 3D
-   * menghasilkan AABB sangat lebar sehingga “mencuri” pointerdown ke petak (mis. 11–24).
-   * elementsFromPoint mengabaikan pointer-events:none dan mengikuti tumpukan nyata.
+   * Klik petak: delegation di .board-grid + elementsFromPoint bila target bukan .tile
+   * (img/teks/ tumpukan 3D). HUD .board-hub-float tetap pointer-events:none kecuali tombol.
    */
   const boardMass = el("board-mass");
-  const boardHubFloat = el("board-hub-float");
-  function hubPickAtClient(x, y) {
-    const stack = document.elementsFromPoint(x, y);
-    for (const raw of stack) {
-      if (!(raw instanceof Element)) continue;
-      if (raw.closest(".tile")) return null;
-      if (!boardHubFloat?.contains(raw)) continue;
-      const btn = raw.closest("button");
-      if (!btn || !boardHubFloat.contains(btn)) continue;
-      if (btn === btnGanjil) return "ganjil";
-      if (btn === btnGenap) return "genap";
-      if (btn === btnRoll) return "roll";
-      if (btn === dieA || btn === dieB) return "roll";
+
+  function eventTargetElement(ev) {
+    const raw = ev.target;
+    if (raw instanceof Element) return raw;
+    if (raw && raw.parentElement) return raw.parentElement;
+    return null;
+  }
+
+  /** Petak di bawah pointer (termasuk tumpukan 3D / target bukan .tile langsung). */
+  function pickTileFromEvent(ev) {
+    if (!grid) return null;
+    const from = eventTargetElement(ev);
+    if (from) {
+      const direct = from.closest(".tile");
+      if (direct && grid.contains(direct)) return direct;
+    }
+    const cx = ev.clientX;
+    const cy = ev.clientY;
+    if (typeof cx !== "number" || typeof cy !== "number") return null;
+    if (typeof document.elementsFromPoint !== "function") return null;
+    const stack = document.elementsFromPoint(cx, cy);
+    if (!stack?.length) return null;
+    for (const node of stack) {
+      if (!(node instanceof Element)) continue;
+      const t = node.closest(".tile");
+      if (t && grid.contains(t)) return t;
     }
     return null;
   }
-  function onBoardMassPointerDownCapture(e) {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    if (e.target instanceof Element && e.target.closest(".tile")) return;
-    const hit = hubPickAtClient(e.clientX, e.clientY);
-    if (!hit) return;
-    e.stopPropagation();
-    if (hit === "roll") void activateRoll();
-    else if (hit === "ganjil") setParity("ganjil");
-    else if (hit === "genap") setParity("genap");
-  }
-  boardMass?.addEventListener("pointerdown", onBoardMassPointerDownCapture, true);
 
-  for (const cell of tileEls()) {
-    cell.addEventListener("click", () => {
-      const idx = Number(cell.dataset.index);
-      openModal(tiles[idx]);
-    });
+  grid?.addEventListener("click", (e) => {
+    const tile = pickTileFromEvent(e);
+    if (!tile) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const idx = Number(tile.dataset.index);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= tiles.length) return;
+    openModal(tiles[idx]);
+  });
+
+  function onBoardMassPointerDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    /* Petak: modal dibuka lewat click di .board-grid (lebih konsisten di atas img / 3D). */
+
+    /* 1. Deteksi klik pada tombol board (HUD) via pointerdown */
+    const btn = eventTargetElement(e)?.closest("button");
+    if (btn) {
+      if (btn === btnRoll || btn === dieA || btn === dieB) {
+        e.stopPropagation();
+        e.preventDefault();
+        void activateRoll();
+      } else if (btn === btnGanjil) {
+        e.stopPropagation();
+        e.preventDefault();
+        setParity("ganjil");
+      } else if (btn === btnGenap) {
+        e.stopPropagation();
+        e.preventDefault();
+        setParity("genap");
+      }
+    }
   }
+  
+  /* Tidak menggunakan phase "capture" lagi, percayakan native bubble */
+  boardMass?.addEventListener("pointerdown", onBoardMassPointerDown);
 
   setActive(0);
   placeTokenOnCell(0);
 
   /** Kontrol orbit 3D — seret = akumulasi yaw/pitch (tak terbatas); Shift+seret = roll Z */
-  const LS_ORBIT_V3 = "mono.board3d.v3";
+  const LS_ORBIT_V3 = "mono.board3d.v4"; /* v4: default pitch 50° + persp 2200 */
   const LS_ORBIT_V2 = "mono.board3d.v2";
   const LS_ORBIT_V1 = "mono.board3d.v1";
-  /** Default panel orbit: Y:0° X:~LGR Z:0° (sama dengan reset & :root); HUD membatalkan pitch X lewat CSS */
+  /** Default panel orbit: Y:0° X:50° Z:0°; perspektif dekat 2200px */
   const DEFAULT_ORBIT_YAW = 0;
-  const DEFAULT_ORBIT_PITCH = 38;
+  const DEFAULT_ORBIT_PITCH = 50;
   const DEFAULT_ORBIT_ROLL = 0;
-  /** Pitch berlebihan = petak pojok terlalu menciut seperti “dilihat dari samping” */
+  const DEFAULT_ORBIT_PERSP = 2200;
+  /** Pitch berlebihan = petak pojok terlalu menciut seperti "dilihat dari samping" */
   const MAX_PITCH = 68;
   const ORBIT_PERSP_MIN = 2200;
   const ORBIT_PERSP_MAX = 20000;
@@ -284,9 +326,9 @@
     orbitRoll = DEFAULT_ORBIT_ROLL;
     knobNx = 0;
     knobNy = 0;
-    if (orbitPersp) orbitPersp.value = String(readBasePerspective());
+    if (orbitPersp) orbitPersp.value = String(DEFAULT_ORBIT_PERSP);
     if (orbitKnob) orbitKnob.style.transform = "translate(0px, 0px)";
-    root.style.removeProperty("--board-3d-persp");
+    root.style.setProperty("--board-3d-persp", `${DEFAULT_ORBIT_PERSP}px`);
     applyOrbitTransforms();
     applyPerspectiveOnly();
     if (orbitPerspVal && orbitPersp) orbitPerspVal.textContent = `${orbitPersp.value}px`;
@@ -395,7 +437,7 @@
       orbitYaw = DEFAULT_ORBIT_YAW;
       orbitPitchExtra = DEFAULT_ORBIT_PITCH;
       orbitRoll = DEFAULT_ORBIT_ROLL;
-      orbitPersp.value = String(base);
+      orbitPersp.value = String(DEFAULT_ORBIT_PERSP);
     }
     knobNx = 0;
     knobNy = 0;

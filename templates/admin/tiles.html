@@ -1,0 +1,109 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Pengaturan Petak - {{ board.name }}{% endblock %}
+{% block header_title %}Pengaturan Petak: {{ board.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    .tile-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.2s;
+    }
+    .tile-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+    }
+    .tile-preview {
+        height: 120px;
+        background: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .tile-preview img {
+        max-height: 80%;
+        max-width: 80%;
+        object-fit: contain;
+    }
+    .tile-type-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        font-size: 0.65rem;
+    }
+    .tile-info {
+        padding: 1.25rem;
+    }
+    .tile-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    .tile-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+    .tile-price {
+        color: #4ade80;
+        font-weight: 700;
+    }
+    .tile-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <a href="{% url 'admin_boards' %}" style="color: var(--text-muted); text-decoration: none;">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Daftar Papan
+    </a>
+</div>
+
+<div class="tile-grid">
+    {% for tile in tiles %}
+    <div class="tile-card">
+        <div class="tile-preview" style="{% if tile.group_color %}border-top: 5px solid {{ tile.group_color }};{% endif %}">
+            {% if tile.image %}
+                <img src="{{ tile.image.url }}" alt="{{ tile.name }}">
+            {% else %}
+                <i class="fa-solid fa-image fa-3x" style="opacity: 0.2;"></i>
+            {% endif %}
+            <span class="badge badge-success tile-type-badge">{{ tile.get_tile_type_display }}</span>
+        </div>
+        <div class="tile-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h3>{{ tile.name }}</h3>
+                <span style="color: var(--text-muted);">#{{ tile.position }}</span>
+            </div>
+            <div class="tile-meta">
+                <span>Harga: <span class="tile-price">Rp {{ tile.price }}</span></span>
+                <span>Sewa: <span>Rp {{ tile.rent_base }}</span></span>
+            </div>
+            <div class="tile-actions">
+                <button class="btn btn-primary btn-sm" style="flex: 1;"><i class="fa-solid fa-edit"></i> Edit</button>
+                <button class="btn btn-sm" style="background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-image"></i> Gambar</button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="content-card" style="grid-column: 1 / -1; text-align: center;">
+        <p>Belum ada petak yang diatur untuk papan ini.</p>
+        <button class="btn btn-primary" style="margin-top: 1rem;"><i class="fa-solid fa-magic"></i> Generate Petak Standard (40)</button>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Management User{% endblock %}
+{% block header_title %}Management User & Role{% endblock %}
+
+{% block content %}
+<div class="content-card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Daftar Pengguna</h2>
+        <button class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Tambah User</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td><strong>{{ user.username }}</strong></td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% for role in user.roles.all %}
+                        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">{{ role.name }}</span>
+                    {% empty %}
+                        <span style="color: var(--text-muted);">No Role</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if user.is_active %}
+                        <span class="badge badge-success">Aktif</span>
+                    {% else %}
+                        <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #f87171;">Non-aktif</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <button class="btn btn-sm" style="background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-edit"></i></button>
+                    <button class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); color: #f87171;"><i class="fa-solid fa-trash"></i></button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="content-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Role & Permission</h2>
+        <button class="btn btn-primary"><i class="fa-solid fa-shield"></i> Tambah Role</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Role</th>
+                <th>Jumlah Permission</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td><strong>{{ role.name }}</strong></td>
+                <td>{{ role.permissions.count }} Permissions</td>
+                <td>
+                    <button class="btn btn-sm" style="background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-key"></i> Atur Hak Akses</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 2rem;">Belum ada role yang dibuat.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

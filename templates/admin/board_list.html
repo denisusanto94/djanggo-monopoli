@@ -1,0 +1,44 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Pengaturan Papan{% endblock %}
+{% block header_title %}Daftar Papan Monopoli{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Semua Papan</h2>
+        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah Papan Baru</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Papan</th>
+                <th>Deskripsi</th>
+                <th>Status</th>
+                <th>Terakhir Diupdate</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for board in boards %}
+            <tr>
+                <td><strong>{{ board.name }}</strong></td>
+                <td>{{ board.description|truncatechars:50 }}</td>
+                <td><span class="badge badge-success">Aktif</span></td>
+                <td>{{ board.updated_at|date:"d M Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'admin_tiles' board.id %}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-gears"></i> Atur Petak
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 2rem;">Belum ada papan yang dibuat.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

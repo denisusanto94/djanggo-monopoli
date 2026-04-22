@@ -34,12 +34,26 @@ def board(request):
         }
         for t in TILES
     ]
+    from .models import Character
+    characters = Character.objects.filter(is_active=True)
+    characters_js = [
+        {
+            "id": c.id,
+            "name": c.name,
+            "color": c.color,
+            "image": c.image.url if c.image else None,
+            "model_3d": c.model_3d.url if c.model_3d else None,
+        }
+        for c in characters
+    ]
+    
     return render(
         request,
         "board/index.html",
         {
             "tiles": TILES,
             "tiles_json": json.dumps(tiles_js, ensure_ascii=False),
+            "characters_json": json.dumps(characters_js, ensure_ascii=False),
         },
     )
 

@@ -18,6 +18,8 @@ db.sqlite3-journal
 /media/
 /staticfiles/
 /static_collected/
+/media/*
+!/media/.gitkeep
 
 # Environment & secrets
 .env
@@ -41,6 +43,21 @@ build/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Multimedia and 3D Assets (Large files)
+*.mp4
+*.m4v
+*.mov
+*.wav
+*.mp3
+*.glb
+*.gltf
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+board.webp
 
 # Editors / IDE
 .idea/

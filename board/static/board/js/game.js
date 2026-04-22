@@ -182,11 +182,13 @@
 
   // Fix tombol Tutup
   btnModalClose?.addEventListener("click", () => {
+    if (!gameStarted) return;
     if (modal.open) modal.close();
   });
 
   // Klik backdrop (luar modal-card) juga menutup
   modal?.addEventListener("click", (e) => {
+    if (!gameStarted) return;
     if (e.target === modal) modal.close();
   });
 
@@ -315,6 +317,7 @@
   }
 
   grid?.addEventListener("click", (e) => {
+    if (!gameStarted) return;
     const tile = pickTileFromEvent(e);
     if (!tile) return;
     e.preventDefault();
@@ -332,6 +335,7 @@
   document.addEventListener(
     "click",
     (e) => {
+      if (!gameStarted) return;
       /* Jika sudah ditangani grid (target ada di dalam .tile) — lewati */
       if (e.target instanceof Element && e.target.closest(".tile")) return;
       /* Jangan process tile-click saat modal sedang open */
@@ -394,6 +398,7 @@
   );
 
   function onBoardMassPointerDown(e) {
+    if (!gameStarted) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
 
     /* Petak: modal dibuka lewat click di .board-grid (lebih konsisten di atas img / 3D). */
@@ -775,6 +780,203 @@
       orbitKnob.style.transform = `translate(${knobNx * maxR}px, ${knobNy * maxR}px)`;
     }
   });
+
+  let gameStarted = false;
+
+  /* ============================================================
+   * SETUP GAME LOGIC
+   * ============================================================ */
+  const characters = JSON.parse(el("characters-data").textContent);
+  let playerCount = 2;
+  let players = [];
+  let currentSetupPlayer = 0;
+
+  window.setPlayerCount = (count) => {
+    playerCount = count;
+    const btnSetups = document.querySelectorAll('#setup-step-1 .btn-setup');
+    btnSetups.forEach((btn, i) => {
+      btn.classList.toggle('selected', i + 2 === count);
+    });
+    
+    // Build player config list for step 2
+    const configList = el("player-config-list");
+    configList.innerHTML = "";
+    for (let i = 0; i < count; i++) {
+      configList.innerHTML += `
+        <div class="player-config-item">
+          <span>Pemain ${i + 1}</span>
+          <div class="player-type-toggle">
+            <button type="button" class="type-btn ${i === 0 ? 'active' : ''}" onclick="togglePlayerType(${i}, 'human')">Human</button>
+            <button type="button" class="type-btn ${i > 0 ? 'active' : ''}" onclick="togglePlayerType(${i}, 'bot')">Bot</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Initialize players array
+    players = Array.from({ length: count }, (_, i) => ({
+      index: i,
+      type: i === 0 ? 'human' : 'bot',
+      character: null,
+      pos: 0
+    }));
+
+    el("setup-step-1").classList.remove("active");
+    el("setup-step-2").classList.add("active");
+  };
+
+  window.togglePlayerType = (idx, type) => {
+    players[idx].type = type;
+    const items = document.querySelectorAll('.player-config-item');
+    const btns = items[idx].querySelectorAll('.type-btn');
+    btns[0].classList.toggle('active', type === 'human');
+    btns[1].classList.toggle('active', type === 'bot');
+  };
+
+  window.goToStep3 = () => {
+    el("setup-step-2").classList.remove("active");
+    el("setup-step-3").classList.add("active");
+    renderCharacterSelection();
+    processNextCharacterSelection();
+  };
+
+  function renderCharacterSelection() {
+    const grid = el("char-selection-grid");
+    grid.innerHTML = characters.map(c => `
+      <div class="char-item" id="char-${c.id}" onclick="selectCharacter(${c.id})">
+        <img src="${c.image || ''}" class="char-img" alt="${c.name}">
+        <span class="char-name">${c.name}</span>
+      </div>
+    `).join("");
+  }
+
+  function processNextCharacterSelection() {
+    // Find next human player without character
+    const nextHuman = players.find(p => p.type === 'human' && !p.character);
+    if (nextHuman) {
+      currentSetupPlayer = nextHuman.index;
+      el("character-pick-instruction").textContent = `Pemain ${nextHuman.index + 1}, pilih karakter Anda`;
+    } else {
+      // All humans picked, assign bots randomly
+      players.forEach(p => {
+        if (p.type === 'bot' && !p.character) {
+          const available = characters.filter(c => !players.some(pl => pl.character && pl.character.id === c.id));
+          p.character = available[Math.floor(Math.random() * available.length)];
+        }
+      });
+      el("character-pick-instruction").textContent = "Semua pemain siap!";
+      el("char-selection-grid").style.display = "none";
+      el("setup-actions").style.display = "block";
+    }
+  }
+
+  window.selectCharacter = (charId) => {
+    const char = characters.find(c => c.id === charId);
+    if (players.some(p => p.character && p.character.id === charId)) return;
+    
+    players[currentSetupPlayer].character = char;
+    el(`char-${charId}`).classList.add("selected", "disabled");
+    el(`char-${charId}`).onclick = null;
+    
+    processNextCharacterSelection();
+  };
+
+  window.startGame = () => {
+    gameStarted = true;
+    el("game-setup-overlay").classList.add("hidden");
+    setTimeout(() => el("game-setup-overlay").style.display = "none", 500);
+    
+    // Create tokens for all players
+    const grid = el("board-grid");
+    // Remove existing token if any
+    if (el("token")) el("token").remove();
+    
+    players.forEach((p, i) => {
+      const t = document.createElement("div");
+      t.className = "token token--player-" + i;
+      t.id = "token-" + i;
+      t.style.backgroundColor = p.character.color;
+      if (p.character.image) {
+        t.style.backgroundImage = `url(${p.character.image})`;
+        t.style.backgroundSize = "cover";
+      }
+      grid.appendChild(t);
+      placeTokenOnCell(i, 0);
+    });
+    
+    currentPlayerIdx = 0;
+    updateHubForCurrentPlayer();
+  };
+
+  let currentPlayerIdx = 0;
+
+  function updateHubForCurrentPlayer() {
+    const p = players[currentPlayerIdx];
+    const hubHint = document.querySelector(".hub-hint");
+    hubHint.innerHTML = `<span style="color: ${p.character.color}; font-weight: 800;">GILIRAN: Pemain ${currentPlayerIdx + 1} (${p.character.name})</span>`;
+    
+    if (p.type === 'bot') {
+      btnRoll.disabled = true;
+      setTimeout(activateRoll, 1500);
+    } else {
+      btnRoll.disabled = false;
+    }
+  }
+
+  function placeTokenOnCell(playerIdx, cellIndex) {
+    const cell = document.querySelector(`.tile[data-index="${cellIndex}"]`);
+    const token = el("token-" + playerIdx);
+    if (!cell || !grid || !token) return;
+    
+    token.classList.add("visible");
+    
+    // Offset each player token slightly so they don't overlap perfectly
+    const offsets = [
+      { x: -10, y: -10 },
+      { x: 10, y: -10 },
+      { x: -10, y: 10 },
+      { x: 10, y: 10 }
+    ];
+    const offset = offsets[playerIdx] || { x: 0, y: 0 };
+    
+    const x = cell.offsetLeft + cell.offsetWidth / 2 + offset.x;
+    const y = cell.offsetTop + cell.offsetHeight / 2 + offset.y;
+    token.style.left = `${x}px`;
+    token.style.top = `${y}px`;
+  }
+
+  async function moveSteps(steps) {
+    moving = true;
+    btnRoll.disabled = true;
+    const p = players[currentPlayerIdx];
+    for (let i = 0; i < steps; i += 1) {
+      p.pos = (p.pos + 1) % tiles.length;
+      if (currentPlayerIdx === 0) setActive(p.pos); // Only show active state for human? Or all?
+      placeTokenOnCell(currentPlayerIdx, p.pos);
+      await sleep(120);
+    }
+    moving = false;
+    
+    // Check next turn
+    setTimeout(() => {
+      openModal(tiles[p.pos]);
+      // After modal closed (or some delay), switch turn
+      // For now, let's just switch turn after modal opens (simplified)
+      currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+      updateHubForCurrentPlayer();
+    }, 500);
+  }
+
+  // Override activateRoll to use currentPlayerIdx
+  async function activateRoll() {
+    const now = Date.now();
+    if (moving || now - lastRollAt < 450) return;
+    lastRollAt = now;
+    const steps = rollDice();
+    await moveSteps(steps);
+  }
+
+  /* ============================================================ */
 
   initOrbit();
 })();

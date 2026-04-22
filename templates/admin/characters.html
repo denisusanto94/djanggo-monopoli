@@ -1,0 +1,133 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Management Karakter{% endblock %}
+{% block header_title %}Karakter Permainan{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Daftar Karakter</h2>
+        <button class="btn btn-primary" onclick="openCharModal()"><i class="fa-solid fa-plus"></i> Tambah Karakter</button>
+    </div>
+
+    <div class="tile-grid">
+        {% for char in characters %}
+        <div class="tile-card">
+            <div class="tile-preview" style="background: {{ char.color }}22; border-bottom: 4px solid {{ char.color }};">
+                {% if char.image %}
+                    <img src="{{ char.image.url }}" alt="{{ char.name }}">
+                {% elif char.model_3d %}
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <i class="fa-solid fa-cube fa-3x" style="color: {{ char.color }};"></i>
+                        <span style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">3D Model Ready</span>
+                    </div>
+                {% else %}
+                    <i class="fa-solid fa-user-astronaut fa-3x" style="color: {{ char.color }}; opacity: 0.5;"></i>
+                {% endif %}
+            </div>
+            <div class="tile-info">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0;">{{ char.name }}</h3>
+                    <div style="width: 20px; height: 20px; border-radius: 50%; background: {{ char.color }}; border: 2px solid rgba(255,255,255,0.2);"></div>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.875rem; min-height: 3em;">{{ char.description|truncatechars:100 }}</p>
+                <div class="tile-actions">
+                    <button class="btn btn-primary btn-sm" style="flex: 1;" onclick='openCharModal({{ char.id }}, "{{ char.name|escapejs }}", "{{ char.description|escapejs }}", "{{ char.color }}", {{ char.is_active|yesno:"true,false" }})'>
+                        <i class="fa-solid fa-edit"></i> Edit
+                    </button>
+                    <a href="{% url 'admin_character_delete' char.id %}" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); color: #f87171;" onclick="return confirm('Hapus karakter ini?')">
+                        <i class="fa-solid fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; width: 100%; padding: 4rem; grid-column: 1/-1;">
+            <i class="fa-solid fa-users-slash fa-4x" style="opacity: 0.1; margin-bottom: 1rem; display: block;"></i>
+            <p>Belum ada karakter yang dibuat.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Karakter -->
+<div id="charModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+    <div style="background: var(--card-bg); margin: 5% auto; padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 id="modalTitle">Tambah Karakter</h2>
+            <button onclick="closeCharModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="char_id">
+            
+            <div class="form-group">
+                <label>Nama Karakter</label>
+                <input type="text" name="name" id="char_name" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label>Deskripsi</label>
+                <textarea name="description" id="char_description" class="form-input" style="height: 100px; resize: none;"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label>Warna Representasi</label>
+                    <input type="color" name="color" id="char_color" class="form-input" style="height: 45px; padding: 5px;" value="#6366f1">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <div style="display: flex; align-items: center; height: 45px;">
+                        <input type="checkbox" name="is_active" id="char_active" checked style="margin-right: 10px; width: 20px; height: 20px;">
+                        <span>Aktif</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Gambar Token (2D)</label>
+                <input type="file" name="image" class="form-input" accept="image/*">
+                <small style="color: var(--text-muted);">Format: PNG/JPG/WebP</small>
+            </div>
+
+            <div class="form-group">
+                <label>Model 3D (.glb/.gltf)</label>
+                <input type="file" name="model_3d" class="form-input" accept=".glb,.gltf">
+                <small style="color: var(--text-muted);">Gunakan untuk tampilan papan 3D</small>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <button type="button" class="btn" onclick="closeCharModal()" style="flex: 1; background: rgba(255,255,255,0.05);">Batal</button>
+                <button type="submit" class="btn btn-primary" style="flex: 2;">Simpan Karakter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCharModal(id = '', name = '', desc = '', color = '#6366f1', active = true) {
+    document.getElementById('char_id').value = id;
+    document.getElementById('char_name').value = name;
+    document.getElementById('char_description').value = desc;
+    document.getElementById('char_color').value = color;
+    document.getElementById('char_active').checked = active;
+    
+    document.getElementById('modalTitle').innerText = id ? 'Edit Karakter' : 'Tambah Karakter';
+    document.getElementById('charModal').style.display = 'block';
+}
+
+function closeCharModal() {
+    document.getElementById('charModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    let modal = document.getElementById('charModal');
+    if (event.target == modal) {
+        closeCharModal();
+    }
+}
+</script>
+{% endblock %}

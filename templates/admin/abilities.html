@@ -1,0 +1,44 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Ability Cards{% endblock %}
+{% block header_title %}Ability & Skill Cards{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Daftar Ability</h2>
+        <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah Ability</button>
+    </div>
+
+    <div class="tile-grid">
+        {% for ability in abilities %}
+        <div class="tile-card">
+            <div class="tile-preview">
+                {% if ability.image %}
+                    <img src="{{ ability.image.url }}" alt="{{ ability.name }}">
+                {% else %}
+                    <i class="fa-solid fa-bolt fa-3x" style="opacity: 0.2; color: #fbbf24;"></i>
+                {% endif %}
+            </div>
+            <div class="tile-info">
+                <div style="display: flex; justify-content: space-between;">
+                    <h3>{{ ability.name }}</h3>
+                    <span class="badge" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">Lvl {{ ability.power_level }}</span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0.5rem 0;">{{ ability.description|truncatechars:80 }}</p>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Cooldown: {{ ability.cooldown }} turns
+                </div>
+                <div class="tile-actions">
+                    <button class="btn btn-primary btn-sm" style="flex: 1;"><i class="fa-solid fa-edit"></i> Edit</button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; width: 100%; padding: 2rem; grid-column: 1/-1;">
+            <p>Belum ada kartu ability yang dibuat.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

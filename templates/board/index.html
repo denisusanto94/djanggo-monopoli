@@ -171,6 +171,42 @@
   </div>
 
   <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>
+  <script id="characters-data" type="application/json">{{ characters_json|safe }}</script>
+
+  <!-- Setup Game Overlay -->
+  <div id="game-setup-overlay" class="setup-overlay">
+    <div class="setup-card">
+      <div id="setup-step-1" class="setup-step active">
+        <h1 class="setup-title">Monopoly Superapps</h1>
+        <p class="setup-subtitle">Pilih jumlah pemain untuk memulai permainan</p>
+        <div class="player-count-grid">
+          <button type="button" class="btn-setup" onclick="setPlayerCount(2)">2 Pemain</button>
+          <button type="button" class="btn-setup" onclick="setPlayerCount(3)">3 Pemain</button>
+          <button type="button" class="btn-setup" onclick="setPlayerCount(4)">4 Pemain</button>
+        </div>
+      </div>
+
+      <div id="setup-step-2" class="setup-step">
+        <h2 class="setup-title">Konfigurasi Pemain</h2>
+        <p class="setup-subtitle">Tentukan tipe untuk setiap pemain</p>
+        <div id="player-config-list" class="player-config-list">
+          <!-- Dinamis via JS -->
+        </div>
+        <button type="button" class="btn-setup btn-primary" onclick="goToStep3()" style="margin-top: 2rem; width: 100%;">Lanjut ke Karakter</button>
+      </div>
+
+      <div id="setup-step-3" class="setup-step">
+        <h2 class="setup-title">Pilih Karakter</h2>
+        <p class="setup-subtitle" id="character-pick-instruction">Pemain 1, pilih karakter Anda</p>
+        <div class="character-selection-grid" id="char-selection-grid">
+          <!-- Dinamis via JS -->
+        </div>
+        <div id="setup-actions" style="margin-top: 2rem; display: none;">
+          <button type="button" class="btn-setup btn-primary" onclick="startGame()" style="width: 100%;">MULAI PERMAINAN</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <script src="{% static 'board/js/game.js' %}?v=20260422c"></script>
 </body>
 </html>

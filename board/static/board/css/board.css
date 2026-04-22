@@ -228,13 +228,15 @@ body {
   /* Jarak antar petak (gap grid) — diperbesar agar tidak numpuk saat tile di-scale */
   --grid-gap: clamp(4px, 0.9vmin, 10px);
   --board-inset: 0px;
-  /* Persegi maksimal (dynamic viewport); @supports di bawah bisa naik ke large viewport */
-  --board-size: min(
-    calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
-    calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+  /* Persegi maksimal (dynamic viewport); ×1.05 = papan ~5% lebih besar */
+  --board-size: calc(
+    min(
+      calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+      calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+    ) * 1.05
   );
-  --tile-scale: 1.095;
-  --tile-scale-hover: 1.14;
+  --tile-scale: 1.15;
+  --tile-scale-hover: 1.2;
   position: relative;
   /* Kembalikan margin ke 0 auto untuk mencegah bug hit-test pointer events di Chromium/WebKit pada container 3D.
      Gunakan aspect-ratio yang lebih pendek agar container secara natural "terpotong" tingginya sesuai efek visual rotasi 50 derajat. */
@@ -258,9 +260,11 @@ body {
 
 @supports (height: 100lvh) {
   .board-shell.board-shell--diamond {
-    --board-size: min(
-      calc(100lvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
-      calc(100lvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+    --board-size: calc(
+      min(
+        calc(100lvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
+        calc(100lvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+      ) * 1.05
     );
   }
 }
@@ -279,14 +283,14 @@ body {
 .board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
 .board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
-  --tile-scale: 1.16;
-  --tile-scale-hover: 1.21;
+  --tile-scale: 1.22;
+  --tile-scale-hover: 1.27;
   padding: clamp(0px, 0.2vmin, 2.5px);
 }
 
 /* Petak jalur: domino memanjang, selaras skala baru — dikurangi agar tidak overlap */
 .board-shell.board-shell--diamond .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.28;
+  --tile-stretch-y: 1.34;
 }
 
 .board-shell.board-shell--diamond .tile-meta {

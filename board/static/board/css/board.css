@@ -631,42 +631,11 @@ body {
   );
 }
 
-/* Nomor urut petak (1…N) — bayangan tebal agar terbaca di atas ilustrasi */
-.tile-index-shadow {
-  position: absolute;
-  top: 0.14rem;
-  right: 0.14rem;
-  z-index: 5;
-  padding: 0.1em 0.24em 0.12em;
-  border-radius: 5px;
-  font-variant-numeric: tabular-nums;
-  font-weight: 900;
-  font-size: clamp(0.52rem, 1.35vmin + 0.32rem, 0.85rem);
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: #fffef8;
-  pointer-events: none;
-  background: rgba(8, 6, 5, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  text-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.95),
-    0 2px 0 rgba(0, 0, 0, 0.72),
-    0 3px 6px rgba(0, 0, 0, 0.65),
-    0 0 12px rgba(0, 0, 0, 0.45);
-}
-
-.tile-frame:has(.tile-strip) .tile-index-shadow {
-  top: calc(9px + 0.16rem);
-}
-
-.board-shell.board-shell--diamond .tile-index-shadow {
-  font-size: clamp(0.46rem, 1.02vmin + 0.24rem, 0.76rem);
-  padding: 0.08em 0.18em 0.1em;
-  border-radius: 4px;
-}
-
 .tile-strip {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   height: 9px;
   flex-shrink: 0;
   cursor: pointer;

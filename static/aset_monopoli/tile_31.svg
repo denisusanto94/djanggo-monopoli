@@ -7,9 +7,7 @@
     </linearGradient>
   </defs>
   <rect width="200" height="200" fill="url(#g31)"/>
-  <rect x="10" y="10" width="180" height="36" rx="10" fill="#9b59b6" opacity="0.9"/>
-  <text x="100" y="35" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"
-    font-size="16" font-weight="700" fill="#0b1f4d">31</text>
+  <rect x="0" y="0" width="200" height="40" fill="#9b59b6" opacity="0.92"/>
   <text x="100" y="110" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"
     font-size="14" font-weight="600" fill="#0b1f4d">Bonus Roda</text>
   <text x="100" y="135" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"

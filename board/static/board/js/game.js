@@ -811,12 +811,25 @@
 
   function renderCharacterSelection() {
     const grid = el("char-selection-grid");
-    grid.innerHTML = characters.map(c => `
+    grid.innerHTML = characters.map(c => {
+      let previewHtml = '';
+      if (c.shape === 'custom' && (c.image || c.model_3d)) {
+        const imgSrc = c.image || c.model_3d;
+        previewHtml = `<img src="${imgSrc}" class="char-img" alt="${c.name}">`;
+      } else {
+        let shapeStyle = `background: ${c.color || '#6366f1'}; width: 60px; height: 60px; margin: 0 auto 0.5rem auto; display: block; box-shadow: 0 5px 15px ${c.color || '#6366f1'}55;`;
+        if (c.shape === 'circle') shapeStyle += ' border-radius: 50%;';
+        else if (c.shape === 'triangle') shapeStyle += ' clip-path: polygon(50% 0%, 0% 100%, 100% 100%);';
+        else if (c.shape === 'square') shapeStyle += ' border-radius: 8px;';
+        previewHtml = `<div style="${shapeStyle}"></div>`;
+      }
+      return `
       <div class="char-item" id="char-${c.id}" onclick="selectCharacter(${c.id})">
-        <img src="${c.image || ''}" class="char-img" alt="${c.name}">
+        ${previewHtml}
         <span class="char-name">${c.name}</span>
       </div>
-    `).join("");
+    `;
+    }).join("");
   }
 
   function processNextCharacterSelection() {
@@ -864,15 +877,44 @@
       const t = document.createElement("div");
       t.className = `token token--player-${i} token--${p.character.shape}`;
       t.id = "token-" + i;
-      t.style.backgroundColor = p.character.color;
+      t.style.setProperty('--token-color', p.character.color);
+      
+      // Shadow on floor
+      const shadow = document.createElement("div");
+      shadow.className = "token-shadow";
+      t.appendChild(shadow);
+      
+      // Standing body
+      const body = document.createElement("div");
+      body.className = "token-body";
       
       if (p.character.shape === 'custom') {
         if (p.character.image) {
-          t.style.backgroundImage = `url(${p.character.image})`;
-          t.style.backgroundSize = "cover";
+          body.style.backgroundImage = `url(${p.character.image})`;
+          body.style.backgroundSize = "contain";
+          body.style.backgroundRepeat = "no-repeat";
+          body.style.backgroundPosition = "bottom center";
+          body.style.backgroundColor = "transparent";
+          body.style.border = "none";
+          body.style.boxShadow = "none";
+        }
+      } else {
+        // Create 3D volume using multiple layers (Cylinder/Block look)
+        const layersCount = 16;
+        for (let j = 0; j < layersCount; j++) {
+          const layer = document.createElement("div");
+          layer.className = "token-layer";
+          layer.style.transform = `translateZ(${-j}px)`;
+          if (j > 0) {
+            layer.style.filter = `brightness(${1 - j * 0.03})`;
+          }
+          // Add a tiny shadow to fill the gap between layers for a smoother surface
+          layer.style.boxShadow = `0 0 0 0.4px ${p.character.color}`;
+          body.appendChild(layer);
         }
       }
       
+      t.appendChild(body);
       grid.appendChild(t);
       placeTokenOnCell(i, 0);
     });

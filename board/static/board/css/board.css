@@ -225,8 +225,8 @@ body {
   --hub-float-width: min(var(--hub-asphalt-max-w), clamp(8.5rem, 36vmin, 19rem));
   --hub-float-max-height: min(var(--hub-asphalt-max-h), 44vmin, 19rem);
   --hub-float-nudge-y: clamp(2.35rem, 9.2vmin, 5.85rem);
-  /* Jarak antar petak (gap grid) — diperbesar agar tidak numpuk saat tile di-scale */
-  --grid-gap: clamp(4px, 0.9vmin, 10px);
+  /* Jarak antar petak — sedikit lebih lebar di diamond agar pojok tidak “nabrak” */
+  --grid-gap: clamp(5px, 1vmin, 11px);
   --board-inset: 0px;
   /* Persegi maksimal (dynamic viewport); ×1.05 = papan ~5% lebih besar */
   --board-size: calc(
@@ -235,8 +235,8 @@ body {
       calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
     ) * 1.05
   );
-  --tile-scale: 1.15;
-  --tile-scale-hover: 1.2;
+  --tile-scale: 1.08;
+  --tile-scale-hover: 1.14;
   position: relative;
   /* Kembalikan margin ke 0 auto untuk mencegah bug hit-test pointer events di Chromium/WebKit pada container 3D.
      Gunakan aspect-ratio yang lebih pendek agar container secara natural "terpotong" tingginya sesuai efek visual rotasi 50 derajat. */
@@ -283,14 +283,15 @@ body {
 .board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
 .board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
-  --tile-scale: 1.22;
-  --tile-scale-hover: 1.27;
-  padding: clamp(0px, 0.2vmin, 2.5px);
+  /* Muka 1:1 sedikit lebih kecil dari sel + z-index sama jalur → tidak menindih tetangga */
+  --tile-scale: 1.06;
+  --tile-scale-hover: 1.1;
+  padding: clamp(4px, 0.5vmin, 8px);
 }
 
-/* Petak jalur: domino memanjang, selaras skala baru — dikurangi agar tidak overlap */
+/* Petak jalur: domino — stretch dikurangi agar tidak meluber ke petak pojok */
 .board-shell.board-shell--diamond .tile:not([data-tile-code="start"]):not([data-tile-code="corner_jail"]):not([data-tile-code="marble_cup"]):not([data-tile-code="world_tour"]) {
-  --tile-stretch-y: 1.34;
+  --tile-stretch-y: 1.22;
 }
 
 .board-shell.board-shell--diamond .tile-meta {
@@ -554,6 +555,14 @@ body {
 .tile[data-tile-code="marble_cup"],
 .tile[data-tile-code="world_tour"] {
   z-index: 11;
+}
+
+/* Diamond: pojok pakai urutan cat sama petak jalur — hindari overlap visual akibat z-index tinggi */
+.board-shell.board-shell--diamond .tile[data-tile-code="start"],
+.board-shell.board-shell--diamond .tile[data-tile-code="corner_jail"],
+.board-shell.board-shell--diamond .tile[data-tile-code="marble_cup"],
+.board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
+  z-index: 1;
 }
 
 .tile.is-active .tile-frame {

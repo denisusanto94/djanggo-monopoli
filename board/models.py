@@ -145,8 +145,15 @@ class Card(models.Model):
         db_table = 'card'
 
 class Character(models.Model):
+    SHAPE_CHOICES = (
+        ('square', 'Kotak'),
+        ('triangle', 'Segitiga'),
+        ('circle', 'Bulat'),
+        ('custom', 'Custom'),
+    )
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
+    shape = models.CharField(max_length=20, choices=SHAPE_CHOICES, default='circle')
     image = models.ImageField(upload_to='characters/', blank=True, null=True)
     color = models.CharField(max_length=20, default='#6366f1')
     model_3d = models.FileField(upload_to='characters/3d/', blank=True, null=True)

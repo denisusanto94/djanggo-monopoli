@@ -76,7 +76,7 @@
 <div class="tile-grid">
     {% for tile in tiles %}
     <div class="tile-card">
-        <div class="tile-preview" style="{% if tile.group_color %}border-top: 5px solid {{ tile.group_color }};{% endif %}">
+        <div class="tile-preview" {% if tile.group_color %}style="border-top: 5px solid {{ tile.group_color }};"{% endif %}>
             {% if tile.image %}
                 <img src="{{ tile.image.url }}" alt="{{ tile.name }}">
             {% else %}

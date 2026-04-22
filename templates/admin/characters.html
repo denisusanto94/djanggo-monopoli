@@ -14,15 +14,14 @@
         {% for char in characters %}
         <div class="tile-card">
             <div class="tile-preview" style="background: {{ char.color }}22; border-bottom: 4px solid {{ char.color }};">
-                {% if char.image %}
-                    <img src="{{ char.image.url }}" alt="{{ char.name }}">
-                {% elif char.model_3d %}
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <i class="fa-solid fa-cube fa-3x" style="color: {{ char.color }};"></i>
-                        <span style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">3D Model Ready</span>
-                    </div>
+                {% if char.shape == 'custom' %}
+                    {% if char.image %}
+                        <img src="{{ char.image.url }}" alt="{{ char.name }}">
+                    {% elif char.model_3d %}
+                        <img src="{{ char.model_3d.url }}" alt="{{ char.name }}" style="max-height: 80%; width: auto; object-fit: contain;">
+                    {% endif %}
                 {% else %}
-                    <i class="fa-solid fa-user-astronaut fa-3x" style="color: {{ char.color }}; opacity: 0.5;"></i>
+                    <div class="shape-preview shape-{{ char.shape }}" style="background: {{ char.color }}; width: 60px; height: 60px; box-shadow: 0 5px 15px {{ char.color }}55;"></div>
                 {% endif %}
             </div>
             <div class="tile-info">
@@ -32,10 +31,17 @@
                 </div>
                 <p style="color: var(--text-muted); font-size: 0.875rem; min-height: 3em;">{{ char.description|truncatechars:100 }}</p>
                 <div class="tile-actions">
-                    <button class="btn btn-primary btn-sm" style="flex: 1;" onclick='openCharModal({{ char.id }}, "{{ char.name|escapejs }}", "{{ char.description|escapejs }}", "{{ char.color }}", {{ char.is_active|yesno:"true,false" }})'>
+                    <button class="btn btn-primary btn-sm btn-edit-char" style="flex: 1;" 
+                        data-id="{{ char.id|default:'' }}" 
+                        data-name="{{ char.name }}" 
+                        data-desc="{{ char.description }}" 
+                        data-color="{{ char.color }}" 
+                        data-active="{{ char.is_active|yesno:'true,false' }}" 
+                        data-shape="{{ char.shape }}">
                         <i class="fa-solid fa-edit"></i> Edit
                     </button>
-                    <a href="{% url 'admin_character_delete' char.id %}" class="btn btn-sm" style="background: rgba(239, 68, 68, 0.1); color: #f87171;" onclick="return confirm('Hapus karakter ini?')">
+                    <a href="{% url 'admin_character_delete' char.id %}" class="btn btn-sm btn-delete-char" style="background: rgba(239, 68, 68, 0.1); color: #f87171;" 
+                       data-name="{{ char.name }}">
                         <i class="fa-solid fa-trash"></i>
                     </a>
                 </div>
@@ -51,8 +57,8 @@
 </div>
 
 <!-- Modal Karakter -->
-<div id="charModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
-    <div style="background: var(--card-bg); margin: 5% auto; padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1);">
+<div id="charModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); overflow-y: auto;">
+    <div style="background: var(--card-bg); margin: 2rem auto; padding: 2rem; border-radius: 1.5rem; width: 90%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); position: relative;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2 id="modalTitle">Tambah Karakter</h2>
             <button onclick="closeCharModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;"><i class="fa-solid fa-xmark"></i></button>
@@ -72,6 +78,16 @@
                 <textarea name="description" id="char_description" class="form-input" style="height: 100px; resize: none;"></textarea>
             </div>
 
+            <div class="form-group">
+                <label>Bentuk Karakter</label>
+                <select name="shape" id="char_shape" class="form-input" onchange="toggleCustomFields()">
+                    <option value="circle">Bulat (Lingkaran)</option>
+                    <option value="square">Kotak (Persegi)</option>
+                    <option value="triangle">Segitiga</option>
+                    <option value="custom">Custom (Upload Aset)</option>
+                </select>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label>Warna Representasi</label>
@@ -86,16 +102,18 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Gambar Token (2D)</label>
-                <input type="file" name="image" class="form-input" accept="image/*">
-                <small style="color: var(--text-muted);">Format: PNG/JPG/WebP</small>
-            </div>
+            <div id="custom_fields" style="display: none;">
+                <div class="form-group">
+                    <label>Gambar Token (2D)</label>
+                    <input type="file" name="image" class="form-input" accept="image/*">
+                    <small style="color: var(--text-muted);">Format: PNG/JPG/WebP</small>
+                </div>
 
-            <div class="form-group">
-                <label>Model 3D (.glb/.gltf)</label>
-                <input type="file" name="model_3d" class="form-input" accept=".glb,.gltf">
-                <small style="color: var(--text-muted);">Gunakan untuk tampilan papan 3D</small>
+                <div class="form-group">
+                    <label>Animasi Karakter (GIF)</label>
+                    <input type="file" name="model_3d" class="form-input" accept="image/gif">
+                    <small style="color: var(--text-muted);">Gunakan GIF untuk tampilan animasi karakter</small>
+                </div>
             </div>
 
             <div style="margin-top: 2rem; display: flex; gap: 1rem;">
@@ -107,12 +125,15 @@
 </div>
 
 <script>
-function openCharModal(id = '', name = '', desc = '', color = '#6366f1', active = true) {
+function openCharModal(id = '', name = '', desc = '', color = '#6366f1', active = true, shape = 'circle') {
     document.getElementById('char_id').value = id;
     document.getElementById('char_name').value = name;
     document.getElementById('char_description').value = desc;
     document.getElementById('char_color').value = color;
     document.getElementById('char_active').checked = active;
+    document.getElementById('char_shape').value = shape;
+    
+    toggleCustomFields();
     
     document.getElementById('modalTitle').innerText = id ? 'Edit Karakter' : 'Tambah Karakter';
     document.getElementById('charModal').style.display = 'block';
@@ -122,6 +143,11 @@ function closeCharModal() {
     document.getElementById('charModal').style.display = 'none';
 }
 
+function toggleCustomFields() {
+    const shape = document.getElementById('char_shape').value;
+    document.getElementById('custom_fields').style.display = (shape === 'custom') ? 'block' : 'none';
+}
+
 // Close modal when clicking outside
 window.onclick = function(event) {
     let modal = document.getElementById('charModal');
@@ -129,5 +155,31 @@ window.onclick = function(event) {
         closeCharModal();
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.btn-edit-char').forEach(btn => {
+        btn.addEventListener('click', function() {
+            openCharModal(
+                this.dataset.id,
+                this.dataset.name,
+                this.dataset.desc,
+                this.dataset.color,
+                this.dataset.active === 'true',
+                this.dataset.shape
+            );
+        });
+    });
+
+    document.querySelectorAll('.btn-delete-char').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.href;
+            const name = this.dataset.name;
+            showConfirm('Hapus Karakter', `Apakah Anda yakin ingin menghapus karakter ${name}?`, () => {
+                window.location.href = url;
+            });
+        });
+    });
+});
 </script>
 {% endblock %}

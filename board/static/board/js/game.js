@@ -60,7 +60,6 @@
   const modalKind = el("modal-kind");
   const btnModalClose = el("btn-modal-close");
 
-  let pos = 0;
   let moving = false;
 
   const KIND_LABEL = {
@@ -206,33 +205,11 @@
     if (positionLabel) positionLabel.textContent = t.name;
   }
 
-  function placeTokenOnCell(index) {
-    const cell = document.querySelector(`.tile[data-index="${index}"]`);
-    if (!cell || !grid) return;
-    token.classList.add("visible");
-    /* getBoundingClientRect = layar setelah transform; left/top = koordinat lokal grid → token “melorot” */
-    const x = cell.offsetLeft + cell.offsetWidth / 2;
-    const y = cell.offsetTop + cell.offsetHeight / 2;
-    token.style.left = `${x}px`;
-    token.style.top = `${y}px`;
-  }
 
   function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
   }
 
-  async function moveSteps(steps) {
-    moving = true;
-    btnRoll.disabled = true;
-    for (let i = 0; i < steps; i += 1) {
-      pos = (pos + 1) % tiles.length;
-      setActive(pos);
-      placeTokenOnCell(pos);
-      await sleep(120);
-    }
-    moving = false;
-    btnRoll.disabled = false;
-  }
 
   function rollDice() {
     const a = 1 + Math.floor(Math.random() * 6);
@@ -261,14 +238,6 @@
   setParity("genap");
 
   let lastRollAt = 0;
-  async function activateRoll() {
-    const now = Date.now();
-    if (moving || now - lastRollAt < 450) return;
-    lastRollAt = now;
-    const steps = rollDice();
-    await moveSteps(steps);
-    openModal(tiles[pos]);
-  }
 
   btnRoll?.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -543,7 +512,7 @@
     applyOrbitTransforms();
     applyPerspectiveOnly();
     persistOrbit();
-    placeTokenOnCell(pos);
+    updateAllTokens();
   }
 
   function resetOrbit() {
@@ -565,7 +534,7 @@
     } catch (_) {
       /* ignore */
     }
-    placeTokenOnCell(pos);
+    updateAllTokens();
   }
 
   function openOrbitPanel(open) {
@@ -692,7 +661,7 @@
     applyOrbitTransforms();
     applyPerspectiveOnly();
     persistOrbit();
-    placeTokenOnCell(pos);
+    updateAllTokens();
     e.preventDefault();
   }
 
@@ -733,7 +702,7 @@
     }
     applyOrbitTransforms();
     persistOrbit();
-    placeTokenOnCell(pos);
+    updateAllTokens();
   });
 
   orbitToggle?.addEventListener("click", (e) => {
@@ -768,13 +737,13 @@
   orbitPersp?.addEventListener("input", () => {
     applyPerspectiveOnly();
     persistOrbit();
-    placeTokenOnCell(pos);
+    updateAllTokens();
   });
 
   orbitReset?.addEventListener("click", () => resetOrbit());
 
   window.addEventListener("resize", () => {
-    placeTokenOnCell(pos);
+    updateAllTokens();
     if (orbitKnob && joyDragging) {
       const maxR = knobMaxTravelPx();
       orbitKnob.style.transform = `translate(${knobNx * maxR}px, ${knobNy * maxR}px)`;
@@ -893,13 +862,17 @@
     
     players.forEach((p, i) => {
       const t = document.createElement("div");
-      t.className = "token token--player-" + i;
+      t.className = `token token--player-${i} token--${p.character.shape}`;
       t.id = "token-" + i;
       t.style.backgroundColor = p.character.color;
-      if (p.character.image) {
-        t.style.backgroundImage = `url(${p.character.image})`;
-        t.style.backgroundSize = "cover";
+      
+      if (p.character.shape === 'custom') {
+        if (p.character.image) {
+          t.style.backgroundImage = `url(${p.character.image})`;
+          t.style.backgroundSize = "cover";
+        }
       }
+      
       grid.appendChild(t);
       placeTokenOnCell(i, 0);
     });
@@ -908,6 +881,13 @@
     updateHubForCurrentPlayer();
   };
 
+  function updateAllTokens() {
+    if (!gameStarted) return;
+    players.forEach((p, i) => {
+      placeTokenOnCell(i, p.pos);
+    });
+  }
+  
   let currentPlayerIdx = 0;
 
   function updateHubForCurrentPlayer() {
@@ -951,7 +931,7 @@
     const p = players[currentPlayerIdx];
     for (let i = 0; i < steps; i += 1) {
       p.pos = (p.pos + 1) % tiles.length;
-      if (currentPlayerIdx === 0) setActive(p.pos); // Only show active state for human? Or all?
+      setActive(p.pos);
       placeTokenOnCell(currentPlayerIdx, p.pos);
       await sleep(120);
     }

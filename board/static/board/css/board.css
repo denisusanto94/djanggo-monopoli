@@ -2360,3 +2360,32 @@ body {
   font-size: 0.8rem;
   font-weight: 600;
 }
+
+/* Token Shapes */
+.token--circle {
+  border-radius: 50%;
+}
+
+.token--square {
+  border-radius: 4px;
+}
+
+.token--triangle {
+  background-color: transparent !important;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 35px solid var(--token-color, #6366f1);
+  width: 0 !important;
+  height: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* For triangle, we need to handle the background color via border-bottom */
+/* We'll adjust the JS to set a CSS variable instead of backgroundColor for triangle if needed, 
+   but for now let's just use a simpler clip-path if supported */
+
+.token--triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  border-radius: 0 !important;
+}

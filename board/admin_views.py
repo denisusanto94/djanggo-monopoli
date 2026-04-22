@@ -61,6 +61,7 @@ def admin_characters(request):
         char_id = request.POST.get('id')
         name = request.POST.get('name')
         description = request.POST.get('description')
+        shape = request.POST.get('shape')
         color = request.POST.get('color')
         is_active = request.POST.get('is_active') == 'on'
         
@@ -68,12 +69,14 @@ def admin_characters(request):
             character = Character.objects.get(id=char_id)
             character.name = name
             character.description = description
+            character.shape = shape
             character.color = color
             character.is_active = is_active
         else:
             character = Character(
                 name=name, 
                 description=description, 
+                shape=shape,
                 color=color, 
                 is_active=is_active
             )

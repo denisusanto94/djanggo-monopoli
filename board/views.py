@@ -40,6 +40,7 @@ def board(request):
         {
             "id": c.id,
             "name": c.name,
+            "shape": c.shape,
             "color": c.color,
             "image": c.image.url if c.image else None,
             "model_3d": c.model_3d.url if c.model_3d else None,

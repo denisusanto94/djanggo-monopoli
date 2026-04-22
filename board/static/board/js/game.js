@@ -816,11 +816,14 @@
         const imgSrc = c.image || c.model_3d;
         previewHtml = `<img src="${imgSrc}" class="char-img" alt="${c.name}">`;
       } else {
-        let shapeStyle = `background: ${c.color || '#6366f1'}; width: 60px; height: 60px; margin: 0 auto 0.5rem auto; display: block; box-shadow: 0 5px 15px ${c.color || '#6366f1'}55;`;
-        if (c.shape === 'circle') shapeStyle += ' border-radius: 50%;';
-        else if (c.shape === 'triangle') shapeStyle += ' clip-path: polygon(50% 0%, 0% 100%, 100% 100%);';
-        else if (c.shape === 'square') shapeStyle += ' border-radius: 8px;';
-        previewHtml = `<div style="${shapeStyle}"></div>`;
+        const col = c.color || "#6366f1";
+        const mods =
+          c.shape === "circle"
+            ? "char-preview-shape--circle"
+            : c.shape === "triangle"
+              ? "char-preview-shape--triangle"
+              : "char-preview-shape--square";
+        previewHtml = `<div class="char-preview-shape ${mods}" style="--preview-color: ${col}" aria-hidden="true"></div>`;
       }
       return `
       <div class="char-item" id="char-${c.id}" onclick="selectCharacter(${c.id})">

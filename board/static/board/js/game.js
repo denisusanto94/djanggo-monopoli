@@ -3,6 +3,39 @@
   const tiles = JSON.parse(el("tiles-data").textContent);
   const grid = el("board-grid");
 
+  /* ============================================================
+   * FIX POINTER-EVENTS: semua wrapper 3D = none, hanya .tile = auto
+   * Ini bypass cache CSS / specificity — diterapkan langsung via JS
+   * ============================================================ */
+  const WRAPPER_SELECTORS = [
+    ".app",
+    ".stage",
+    ".board-shell",
+    ".board-pivot",
+    ".board-tilt",
+    ".board-mass",
+    ".board-field",
+    ".board-grid",
+    ".board-field__mid",
+  ];
+  for (const sel of WRAPPER_SELECTORS) {
+    const node = document.querySelector(sel);
+    if (node) node.style.setProperty("pointer-events", "none", "important");
+  }
+  /* Tile itu sendiri harus bisa diklik */
+  for (const tileEl of document.querySelectorAll(".tile")) {
+    tileEl.style.setProperty("pointer-events", "auto", "important");
+  }
+  /* HUD buttons juga harus bisa diklik */
+  const HUD_BTNS = ["btn-roll", "die-a", "die-b", "btn-ganjil", "btn-genap"];
+  for (const btnId of HUD_BTNS) {
+    const btn = el(btnId);
+    if (btn) btn.style.setProperty("pointer-events", "auto", "important");
+  }
+  const hubFloat = el("board-hub-float");
+  if (hubFloat) hubFloat.style.setProperty("pointer-events", "none", "important");
+  /* ============================================================ */
+
   for (const t of tiles) {
     const cell = document.querySelector(`.tile[data-index="${t.index}"]`);
     if (!cell) continue;
@@ -171,6 +204,73 @@
     if (!Number.isFinite(idx) || idx < 0 || idx >= tiles.length) return;
     openModal(tiles[idx]);
   });
+
+  /*
+   * Fallback capture-phase listener di document: menangkap klik yang "jatuh" di luar
+   * .board-grid karena hit-test offset 3D (mis. petak 11–23 di sisi atas diamond).
+   * Bekerja dengan elementsFromPoint → cari .tile paling dekat.
+   */
+  document.addEventListener(
+    "click",
+    (e) => {
+      /* Jika sudah ditangani grid (target ada di dalam .tile) — lewati */
+      if (e.target instanceof Element && e.target.closest(".tile")) return;
+      /* Hanya area papan */
+      const shell = document.querySelector(".board-shell");
+      if (!shell) return;
+      const sr = shell.getBoundingClientRect();
+      if (
+        e.clientX < sr.left - 60 ||
+        e.clientX > sr.right + 60 ||
+        e.clientY < sr.top - 60 ||
+        e.clientY > sr.bottom + 60
+      )
+        return;
+      /* Jangan ganggu HUD atau modal */
+      if (e.target instanceof Element) {
+        if (e.target.closest("#board-hub-float")) return;
+        if (e.target.closest(".modal")) return;
+        if (e.target.closest("#orbit-dock")) return;
+      }
+      /* elementsFromPoint — cari .tile paling atas */
+      const stack = document.elementsFromPoint(e.clientX, e.clientY);
+      let found = null;
+      for (const node of stack) {
+        if (!(node instanceof Element)) continue;
+        const t = node.closest(".tile");
+        if (t && grid?.contains(t)) {
+          found = t;
+          break;
+        }
+      }
+      if (!found) {
+        /* Tidak ketemu lewat stack — cari .tile terdekat secara geometri */
+        const allTiles = [...document.querySelectorAll(".tile")];
+        let minDist = Infinity;
+        for (const tEl of allTiles) {
+          const r = tEl.getBoundingClientRect();
+          if (r.width === 0 || r.height === 0) continue;
+          const cx = r.left + r.width / 2;
+          const cy = r.top + r.height / 2;
+          const dx = e.clientX - cx;
+          const dy = e.clientY - cy;
+          /* Hanya petak yang sudah dekat dengan kursor (threshold 60 × rasio ukuran) */
+          const threshold = Math.max(r.width, r.height) * 0.72;
+          const dist = Math.hypot(dx, dy);
+          if (dist < threshold && dist < minDist) {
+            minDist = dist;
+            found = tEl;
+          }
+        }
+      }
+      if (!found) return;
+      e.stopPropagation();
+      const idx = Number(found.dataset.index);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= tiles.length) return;
+      openModal(tiles[idx]);
+    },
+    true /* capture — tangkap sebelum stopPropagation di level lain */,
+  );
 
   function onBoardMassPointerDown(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;

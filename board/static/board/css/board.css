@@ -187,6 +187,8 @@ body {
   padding: 0;
   border-radius: clamp(14px, 2vw, 22px);
   overflow: visible;
+  /* Wrapper tidak mencegat klik — diteruskan ke .tile */
+  pointer-events: none;
   background:
     repeating-linear-gradient(
       90deg,
@@ -224,7 +226,7 @@ body {
   --hub-float-max-height: min(var(--hub-asphalt-max-h), 44vmin, 19rem);
   --hub-float-nudge-y: clamp(2.35rem, 9.2vmin, 5.85rem);
   /* Jarak antar petak (gap grid) */
-  --grid-gap: clamp(4px, 0.65vmin, 10px);
+  --grid-gap: clamp(1px, 0.25vmin, 3px);
   --board-inset: 0px;
   /* Persegi maksimal (dynamic viewport); @supports di bawah bisa naik ke large viewport */
   --board-size: min(
@@ -234,9 +236,11 @@ body {
   --tile-scale: 1.095;
   --tile-scale-hover: 1.14;
   position: relative;
+  /* Kembalikan margin ke 0 auto untuk mencegah bug hit-test pointer events di Chromium/WebKit pada container 3D.
+     Gunakan aspect-ratio yang lebih pendek agar container secara natural "terpotong" tingginya sesuai efek visual rotasi 50 derajat. */
   margin: 0 auto;
   width: min(var(--board-size), 100%);
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 0.64;
   height: auto;
   max-width: min(var(--board-size), 100%);
   align-items: center;
@@ -268,7 +272,7 @@ body {
 }
 
 .board-shell.board-shell--diamond .tile {
-  padding: clamp(0px, 0.26vmin, 3px);
+  padding: clamp(0px, 0.15vmin, 1.5px);
 }
 
 .board-shell.board-shell--diamond .tile[data-tile-code="start"],
@@ -277,7 +281,7 @@ body {
 .board-shell.board-shell--diamond .tile[data-tile-code="world_tour"] {
   --tile-scale: 1.16;
   --tile-scale-hover: 1.21;
-  padding: clamp(2px, 0.38vmin, 5px);
+  padding: clamp(0px, 0.2vmin, 2.5px);
 }
 
 /* Petak jalur: domino lebih panjang, selaras skala baru */
@@ -322,6 +326,8 @@ body {
   background-image: none;
   box-shadow: none;
   backdrop-filter: none;
+  /* PENTING: semua wrapper pointer-events:none — hanya .tile yg klik */
+  pointer-events: none;
 }
 
 /* Kamera: perspektif + geser; rotasi objek di .board-mass */
@@ -338,6 +344,9 @@ body {
   transform: perspective(var(--board-3d-persp, var(--iso-perspective))) translateY(var(--iso-view-nudge-y));
   /* Pivot lebih ke pusat visual diamond — sudut X terasa seimbang, pojok tidak terlalu menciut */
   transform-origin: 50% 76%;
+  /* PENTING: non-aktifkan pointer di wrapper — hanya .tile yg klik */
+  pointer-events: none;
+  will-change: transform;
 }
 
 .board-mass {
@@ -350,6 +359,8 @@ body {
     rotateY(var(--board-3d-y, 0deg))
     rotateX(calc(var(--iso-rotate-x) + var(--board-3d-x-extra, 0deg)));
   transform-origin: 50% 76%;
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* Satu blok papan 3D: rotasi diamond + grid + HUD di .board-mass */
@@ -560,7 +571,8 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
   background: linear-gradient(168deg, #fffefb 0%, #f6efe4 38%, #ebe2d6 72%, #e0d5c8 100%);
   border: 1px solid rgba(42, 32, 24, 0.32);
   box-shadow:

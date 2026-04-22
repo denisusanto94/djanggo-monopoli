@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030201">
   <title>Monopoli Game</title>
-  <link rel="stylesheet" href="{% static 'board/css/board.css' %}?v=20260422b">
+  <link rel="stylesheet" href="{% static 'board/css/board.css' %}?v=20260422c">
 </head>
 <body>
   <div class="app">
@@ -80,14 +80,28 @@
       </div>
     </main>
 
-    <dialog class="modal" id="tile-modal">
-      <form method="dialog" class="modal-form">
-        <h2 id="modal-title">Petak</h2>
-        <p id="modal-body"></p>
-        <menu class="modal-actions">
-          <button value="close" class="btn-primary">Tutup</button>
-        </menu>
-      </form>
+    <dialog class="modal" id="tile-modal" aria-labelledby="modal-title" aria-modal="true">
+      <div class="modal-card" id="modal-card">
+        <!-- Header warna grup properti -->
+        <div class="modal-header" id="modal-header">
+          <div class="modal-header__badge" id="modal-badge"></div>
+          <h2 class="modal-header__title" id="modal-title">Petak</h2>
+          <p class="modal-header__kind" id="modal-kind"></p>
+        </div>
+
+        <!-- Body konten -->
+        <div class="modal-body" id="modal-body">
+          <!-- Konten diisi JS -->
+        </div>
+
+        <!-- Footer aksi -->
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-close" id="btn-modal-close" aria-label="Tutup detail petak">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Tutup
+          </button>
+        </div>
+      </div>
     </dialog>
   </div>
 
@@ -157,6 +171,6 @@
   </div>
 
   <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>
-  <script src="{% static 'board/js/game.js' %}?v=20260422b"></script>
+  <script src="{% static 'board/js/game.js' %}?v=20260422c"></script>
 </body>
 </html>

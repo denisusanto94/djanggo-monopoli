@@ -23,6 +23,14 @@ def board(request):
             "card_turn_deg": t.card_turn_deg,
             "grid_row": t.grid_row,
             "grid_col": t.grid_col,
+            "rent": t.rent,
+            "rent_1house": t.rent_1house,
+            "rent_2house": t.rent_2house,
+            "rent_3house": t.rent_3house,
+            "rent_4house": t.rent_4house,
+            "rent_hotel": t.rent_hotel,
+            "house_cost": t.house_cost,
+            "description": t.description,
         }
         for t in TILES
     ]

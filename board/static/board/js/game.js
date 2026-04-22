@@ -54,26 +54,145 @@
   const modal = el("tile-modal");
   const modalTitle = el("modal-title");
   const modalBody = el("modal-body");
+  const modalCard = el("modal-card");
+  const modalHeader = el("modal-header");
+  const modalBadge = el("modal-badge");
+  const modalKind = el("modal-kind");
+  const btnModalClose = el("btn-modal-close");
 
   let pos = 0;
   let moving = false;
 
-  const tileEls = () => [...document.querySelectorAll(".tile")].sort(
-    (a, b) => Number(a.dataset.index) - Number(b.dataset.index),
-  );
+  const KIND_LABEL = {
+    property:  "Properti",
+    chance:    "Kartu Kesempatan",
+    tax:       "Pajak",
+    travel:    "Perjalanan",
+    jail:      "Penjara / Kunjungan",
+    parking:   "Parkir Gratis",
+    festival:  "Festival",
+    airport:   "Bandara",
+    start:     "Mulai",
+  };
 
-  function describeTile(t) {
-    const bits = [`Jenis: ${t.kind}`];
-    if (t.price) bits.push(`Harga tanah: Rp ${t.price.toLocaleString("id-ID")}`);
-    return bits.join(" · ");
+  const KIND_ICON = {
+    property:  "🏠",
+    chance:    "❓",
+    tax:       "💸",
+    travel:    "✈️",
+    jail:      "⛓️",
+    parking:   "🅿️",
+    festival:  "🎉",
+    airport:   "🛫",
+    start:     "🎯",
+  };
+
+  function rp(n) {
+    return "Rp " + Number(n).toLocaleString("id-ID");
+  }
+
+  function buildPropertyCard(t) {
+    const rows = [
+      ["Sewa tanah kosong", t.rent],
+      ["Sewa 1 Rumah",      t.rent_1house],
+      ["Sewa 2 Rumah",      t.rent_2house],
+      ["Sewa 3 Rumah",      t.rent_3house],
+      ["Sewa 4 Rumah",      t.rent_4house],
+      ["Sewa Hotel",        t.rent_hotel],
+    ];
+    const tableRows = rows
+      .filter(([, v]) => v != null)
+      .map(([label, val], i) => {
+        const isHotel = i === rows.filter(([, v]) => v != null).length - 1 && label.includes("Hotel");
+        return `<tr class="${isHotel ? "rent-row--hotel" : ""}">
+          <td class="rent-label">${label}</td>
+          <td class="rent-value">${rp(val)}</td>
+        </tr>`;
+      })
+      .join("");
+
+    const houseCostRow = t.house_cost
+      ? `<div class="modal-cost-row">
+          <span class="cost-icon">🏗️</span>
+          <span>Biaya membangun/jual rumah/hotel masing-masing <strong>${rp(t.house_cost)}</strong></span>
+        </div>`
+      : "";
+
+    const mortgageRow = t.price
+      ? `<div class="modal-cost-row">
+          <span class="cost-icon">🏦</span>
+          <span>Nilai hipotek: <strong>${rp(Math.floor(t.price / 2))}</strong></span>
+        </div>`
+      : "";
+
+    return `
+      <div class="modal-price-badge">Harga Beli: <strong>${rp(t.price)}</strong></div>
+      <table class="rent-table">
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div class="modal-costs">
+        ${houseCostRow}
+        ${mortgageRow}
+      </div>`;
+  }
+
+  function buildAirportCard(t) {
+    return `
+      <div class="modal-price-badge">Harga Beli: <strong>${rp(t.price)}</strong></div>
+      <table class="rent-table">
+        <tbody>
+          <tr><td class="rent-label">Memiliki 1 Bandara</td><td class="rent-value">${rp(25)}</td></tr>
+          <tr><td class="rent-label">Memiliki 2 Bandara</td><td class="rent-value">${rp(50)}</td></tr>
+          <tr><td class="rent-label">Memiliki 3 Bandara</td><td class="rent-value">${rp(100)}</td></tr>
+          <tr><td class="rent-label">Memiliki 4 Bandara</td><td class="rent-value">${rp(200)}</td></tr>
+        </tbody>
+      </table>
+      <div class="modal-costs">
+        <div class="modal-cost-row"><span class="cost-icon">🏦</span><span>Nilai hipotek: <strong>${rp(Math.floor(t.price / 2))}</strong></span></div>
+      </div>`;
+  }
+
+  function buildDescCard(t) {
+    const desc = t.description || "";
+    return `<div class="modal-desc">${desc}</div>`;
   }
 
   function openModal(t) {
+    // Header
+    const color = t.color || "#4a4f5a";
+    modalHeader.style.setProperty("--modal-color", color);
+    modalBadge.textContent = KIND_ICON[t.kind] || "📋";
     modalTitle.textContent = t.name;
-    modalBody.textContent = describeTile(t);
-    /* showModal() pada dialog yang sudah open = InvalidStateError (mis. klik petak saat gerak token) */
+    modalKind.textContent = KIND_LABEL[t.kind] || t.kind;
+
+    // Body
+    let bodyHTML = "";
+    if (t.kind === "property") {
+      bodyHTML = buildPropertyCard(t);
+    } else if (t.kind === "airport") {
+      bodyHTML = buildAirportCard(t);
+    } else {
+      bodyHTML = buildDescCard(t);
+    }
+    modalBody.innerHTML = bodyHTML;
+
+    /* showModal() pada dialog yang sudah open = InvalidStateError */
     if (typeof modal.showModal === "function" && !modal.open) modal.showModal();
   }
+
+  // Fix tombol Tutup
+  btnModalClose?.addEventListener("click", () => {
+    if (modal.open) modal.close();
+  });
+
+  // Klik backdrop (luar modal-card) juga menutup
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) modal.close();
+  });
+
+  // Escape key
+  modal?.addEventListener("cancel", () => { /* biarkan default */ });
+
 
   function setActive(index) {
     for (const node of document.querySelectorAll(".tile.is-active")) {
@@ -215,6 +334,8 @@
     (e) => {
       /* Jika sudah ditangani grid (target ada di dalam .tile) — lewati */
       if (e.target instanceof Element && e.target.closest(".tile")) return;
+      /* Jangan process tile-click saat modal sedang open */
+      if (modal?.open) return;
       /* Hanya area papan */
       const shell = document.querySelector(".board-shell");
       if (!shell) return;

@@ -395,7 +395,6 @@
   boardMass?.addEventListener("pointerdown", onBoardMassPointerDown);
 
   setActive(0);
-  placeTokenOnCell(0);
 
   /** Kontrol orbit 3D — seret = akumulasi yaw/pitch (tak terbatas); Shift+seret = roll Z */
   const LS_ORBIT_V3 = "mono.board3d.v4"; /* v4: default pitch 50° + persp 2200 */
@@ -898,8 +897,9 @@
           body.style.border = "none";
           body.style.boxShadow = "none";
         }
+      } else if (p.character.shape === 'circle') {
+        /* Bola polos — tanpa lapisan “chip” 3D */
       } else {
-        // Create 3D volume using multiple layers (Cylinder/Block look)
         const layersCount = 16;
         for (let j = 0; j < layersCount; j++) {
           const layer = document.createElement("div");
@@ -908,7 +908,6 @@
           if (j > 0) {
             layer.style.filter = `brightness(${1 - j * 0.03})`;
           }
-          // Add a tiny shadow to fill the gap between layers for a smoother surface
           layer.style.boxShadow = `0 0 0 0.4px ${p.character.color}`;
           body.appendChild(layer);
         }
@@ -945,24 +944,57 @@
     }
   }
 
+  /**
+   * Posisi token mendekati sudut dalam jalur (menuju tengah papan), seperti cakram di referensi UI.
+   * Beberapa pemain di petak sama direnggangkan tegak lurus arah "ke dalam".
+   */
   function placeTokenOnCell(playerIdx, cellIndex) {
     const cell = document.querySelector(`.tile[data-index="${cellIndex}"]`);
     const token = el("token-" + playerIdx);
     if (!cell || !grid || !token) return;
-    
+
     token.classList.add("visible");
-    
-    // Offset each player token slightly so they don't overlap perfectly
-    const offsets = [
-      { x: -10, y: -10 },
-      { x: 10, y: -10 },
-      { x: -10, y: 10 },
-      { x: 10, y: 10 }
-    ];
-    const offset = offsets[playerIdx] || { x: 0, y: 0 };
-    
-    const x = cell.offsetLeft + cell.offsetWidth / 2 + offset.x;
-    const y = cell.offsetTop + cell.offsetHeight / 2 + offset.y;
+
+    const w = cell.offsetWidth;
+    const h = cell.offsetHeight;
+    const line = Number(cell.dataset.pathLine) || 1;
+    const frac = 0.27;
+
+    let ix = 0;
+    let iy = 0;
+    switch (line) {
+      case 1:
+        ix = 0;
+        iy = -h * frac;
+        break;
+      case 2:
+        ix = w * frac;
+        iy = 0;
+        break;
+      case 3:
+        ix = 0;
+        iy = h * frac;
+        break;
+      case 4:
+        ix = -w * frac;
+        iy = 0;
+        break;
+      default:
+        break;
+    }
+
+    let px = -iy;
+    let py = ix;
+    const plen = Math.hypot(px, py) || 1;
+    px /= plen;
+    py /= plen;
+
+    const spreadPx = Math.min(18, Math.min(w, h) * 0.14);
+    const mid = (players.length - 1) / 2;
+    const stack = spreadPx * (playerIdx - mid);
+
+    const x = cell.offsetLeft + w / 2 + ix + px * stack;
+    const y = cell.offsetTop + h / 2 + iy + py * stack;
     token.style.left = `${x}px`;
     token.style.top = `${y}px`;
   }

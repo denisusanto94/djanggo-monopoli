@@ -1306,10 +1306,88 @@ body {
   border-radius: 0;
 }
 
-/* Shape specific applications */
-.token--circle .token-body,
-.token--circle .token-layer {
-  border-radius: 50% !important;
+/* Bulat = bola 3D di atas papan (kilau + terminator + AO) */
+.token--circle .token-body {
+  bottom: auto;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  /* Sedikit miring ke kamera agar volumetrik di papan isometrik */
+  transform: translateZ(12px) rotateX(-14deg);
+  transform-origin: center center;
+  border-radius: 50%;
+  isolation: isolate;
+  background:
+    /* kilau tajam */
+    radial-gradient(
+      circle at 24% 20%,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.4) 4%,
+      transparent 14%
+    ),
+    /* bloom lembut */
+    radial-gradient(
+      circle at 30% 26%,
+      rgba(255, 255, 255, 0.38) 0%,
+      transparent 38%
+    ),
+    /* cahaya atas (hemisfer) */
+    radial-gradient(
+      ellipse 110% 75% at 34% 22%,
+      rgba(255, 255, 255, 0.28) 0%,
+      transparent 58%
+    ),
+    /* core + terminator gelap */
+    radial-gradient(
+      circle at 38% 36%,
+      color-mix(in srgb, var(--token-color, #ff5a7a) 88%, white) 0%,
+      var(--token-color, #ff5a7a) 28%,
+      color-mix(in srgb, var(--token-color, #ff5a7a) 72%, #0c0a10) 62%,
+      rgba(12, 8, 18, 0.92) 100%
+    );
+  box-shadow:
+    inset 3px 6px 12px rgba(255, 255, 255, 0.38),
+    inset -2px -3px 6px rgba(255, 255, 255, 0.06),
+    inset -8px -16px 22px rgba(0, 0, 0, 0.48),
+    inset 0 -14px 20px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
+    0 8px 16px rgba(0, 0, 0, 0.42),
+    0 3px 6px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.4));
+}
+
+.token--circle .token-body::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 78% 72%,
+    transparent 52%,
+    rgba(255, 255, 255, 0.12) 58%,
+    transparent 68%
+  );
+  mix-blend-mode: soft-light;
+}
+
+.token--circle .token-shadow {
+  width: 24px;
+  height: 9px;
+  top: 62%;
+  left: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.52) 0%,
+    rgba(0, 0, 0, 0.22) 45%,
+    transparent 72%
+  );
+  filter: blur(5px);
+  transform: translate(-50%, -50%) scaleX(1.15);
+  border-radius: 50%;
 }
 
 .token--square .token-body,

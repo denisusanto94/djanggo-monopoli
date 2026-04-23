@@ -95,48 +95,34 @@ def admin_users(request):
     return render(request, 'admin/users.html', {'users': users, 'roles': roles})
 
 
-def _redirect_after_board_quick_add_error(return_board_id):
-    try:
-        bid = int(return_board_id)
-    except (TypeError, ValueError):
-        return redirect('admin_boards')
-    if bid > 0 and Board.objects.filter(pk=bid).exists():
-        return redirect('admin_tiles', board_id=bid)
-    return redirect('admin_boards')
-
-
 @login_required(login_url='admin_login')
 def admin_board_list(request):
     redir = _require_staff(request)
     if redir:
         return redir
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'create_board':
+            name = (request.POST.get('board_name') or '').strip()
+            if not name:
+                messages.error(request, 'Nama papan wajib diisi.')
+            else:
+                desc = (request.POST.get('board_description') or '').strip()
+                board = Board.objects.create(
+                    name=name,
+                    description=desc or None,
+                    is_active=True,
+                    is_builtin=False,
+                )
+                messages.success(
+                    request,
+                    f'Papan "{board.name}" dibuat. Tambah petak atau gunakan Generate di halaman atur petak.',
+                )
+                return redirect('admin_tiles', board_id=board.id)
+        else:
+            messages.error(request, 'Aksi tidak dikenal.')
     boards = Board.objects.all().order_by('-is_builtin', '-updated_at')
     return render(request, 'admin/board_list.html', {'boards': boards})
-
-
-@login_required(login_url='admin_login')
-@require_POST
-def admin_board_quick_add(request):
-    redir = _require_staff(request)
-    if redir:
-        return redir
-    ret = request.POST.get('return_board_id')
-    name = (request.POST.get('quick_name') or '').strip()
-    if not name:
-        messages.error(request, 'Nama papan wajib diisi.')
-        return _redirect_after_board_quick_add_error(ret)
-    desc = (request.POST.get('quick_description') or '').strip()
-    board = Board.objects.create(
-        name=name,
-        description=desc or None,
-        is_active=True,
-        is_builtin=False,
-    )
-    messages.success(
-        request,
-        f'Papan "{board.name}" dibuat. Atur petak atau generate dari template.',
-    )
-    return redirect('admin_tiles', board_id=board.id)
 
 
 @login_required(login_url='admin_login')
@@ -169,8 +155,14 @@ def admin_board_delete(request, board_id):
         )
         return redirect('admin_boards')
     name = board.name
+    for t in board.tiles.all():
+        if t.image:
+            t.image.delete(save=False)
     board.delete()
-    messages.success(request, f'Papan "{name}" dan semua petaknya telah dihapus.')
+    messages.success(
+        request,
+        f'Papan "{name}" beserta semua petak dan berkas terkait telah dihapus.',
+    )
     return redirect('admin_boards')
 
 
@@ -214,10 +206,51 @@ def admin_tile_setup(request, board_id):
                 f'Berhasil membuat {n} petak dari template papan standar.',
             )
             return redirect('admin_tiles', board_id=board.id)
+        if action == 'add_tile':
+            name = (request.POST.get('tile_name') or '').strip()
+            pos = _parse_int(request.POST, 'tile_position', -1)
+            tt = request.POST.get('tile_type') or 'PROPERTY'
+            allowed_tt = {c[0] for c in Tile.TILE_TYPES}
+            if not name:
+                messages.error(request, 'Nama petak wajib diisi.')
+            elif pos < 0 or pos > 255:
+                messages.error(request, 'Posisi petak tidak valid (0–255).')
+            elif tt not in allowed_tt:
+                messages.error(request, 'Jenis petak tidak valid.')
+            elif board.tiles.filter(position=pos).exists():
+                messages.error(request, f'Posisi {pos} sudah dipakai petak lain.')
+            else:
+                code = (request.POST.get('tile_code') or '').strip()[:64] or f'tile_{pos}'
+                Tile.objects.create(
+                    board=board,
+                    name=name,
+                    code=code,
+                    position=pos,
+                    tile_type=tt,
+                    display_mode='static',
+                    path_line=max(1, min(4, _parse_int(request.POST, 'tile_path_line', 1))),
+                    group_color=(request.POST.get('tile_group_color') or '').strip()[:32],
+                    price=_parse_int(request.POST, 'tile_price', 0),
+                    rent_base=_parse_int(request.POST, 'tile_rent_base', 0),
+                    rent_1house=_parse_int(request.POST, 'tile_rent_1house', 0),
+                    rent_2house=_parse_int(request.POST, 'tile_rent_2house', 0),
+                    rent_3house=_parse_int(request.POST, 'tile_rent_3house', 0),
+                    rent_4house=_parse_int(request.POST, 'tile_rent_4house', 0),
+                    rent_hotel=_parse_int(request.POST, 'tile_rent_hotel', 0),
+                    house_price=_parse_int(request.POST, 'tile_house_price', 0),
+                    hotel_price=_parse_int(request.POST, 'tile_hotel_price', 0),
+                    description=(request.POST.get('tile_description') or '').strip(),
+                )
+                messages.success(request, f'Petak "{name}" ditambahkan di posisi {pos}.')
+            return redirect('admin_tiles', board_id=board.id)
         messages.error(request, 'Aksi tidak dikenal.')
         return redirect('admin_tiles', board_id=board.id)
     tiles = Tile.objects.filter(board=board).order_by('position')
-    return render(request, 'admin/tiles.html', {'board': board, 'tiles': tiles})
+    return render(
+        request,
+        'admin/tiles.html',
+        {'board': board, 'tiles': tiles, 'tile_types': Tile.TILE_TYPES},
+    )
 
 
 @login_required(login_url='admin_login')

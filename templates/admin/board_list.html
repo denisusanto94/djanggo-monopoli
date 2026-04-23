@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 <style>
-    .board-toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 2rem; justify-content: space-between; }
+    .board-toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; justify-content: space-between; }
     .switch-form { display: inline-flex; align-items: center; vertical-align: middle; }
     .switch-toggle { position: relative; display: inline-block; width: 46px; height: 26px; }
     .switch-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
@@ -23,6 +23,16 @@
     .switch-toggle input:checked + .slider::before { transform: translateX(20px); }
     .switch-label { font-size: 0.75rem; color: var(--text-muted); margin-left: 0.35rem; }
     .board-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .add-board-panel {
+        margin-bottom: 2rem; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .add-board-panel summary {
+        cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .add-board-panel summary::-webkit-details-marker { display: none; }
+    .add-board-form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-top: 1rem; }
+    .add-board-form .form-input { flex: 1; min-width: 180px; margin: 0; }
 </style>
 {% endblock %}
 
@@ -32,12 +42,31 @@
         <div>
             <h2 style="margin-bottom: 0.5rem;">Semua Papan</h2>
             <p style="color: var(--text-muted); font-size: 0.875rem;">
-                Login admin: <code>/admin/login/</code> — tambah papan baru dari halaman <strong>Atur petak</strong> (buka salah satu papan).
+                Login admin: <code>/admin/login/</code> — tambah papan baru lewat form di bawah (atau <a href="{% url 'admin_board_new' %}" style="color: var(--primary);">form lengkap</a>).
             </p>
         </div>
     </div>
 
-    <table style="margin-top: 1rem;">
+    <details class="add-board-panel">
+        <summary><i class="fa-solid fa-plus"></i> Tambah papan baru</summary>
+        <form method="post" action="{% url 'admin_boards' %}" class="add-board-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_board">
+            <div class="form-group" style="flex: 1; min-width: 200px; margin: 0;">
+                <label for="board_name" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem;">Nama papan <span style="color:#f87171">*</span></label>
+                <input type="text" class="form-input" id="board_name" name="board_name" placeholder="Nama papan" maxlength="100" required aria-label="Nama papan baru">
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 200px; margin: 0;">
+                <label for="board_description" style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem;">Deskripsi (opsional)</label>
+                <input type="text" class="form-input" id="board_description" name="board_description" placeholder="Deskripsi" maxlength="500">
+            </div>
+            <button type="submit" class="btn btn-primary" style="white-space: nowrap;">
+                <i class="fa-solid fa-check"></i> Simpan &amp; atur petak
+            </button>
+        </form>
+    </details>
+
+    <table style="margin-top: 0.5rem;">
         <thead>
             <tr>
                 <th>Nama Papan</th>
@@ -71,7 +100,7 @@
                             <i class="fa-solid fa-gears"></i> Atur Petak
                         </a>
                         {% if not board.is_builtin %}
-                        <form method="post" action="{% url 'admin_board_delete' board.id %}" style="display: inline;" onsubmit="return confirm('Hapus papan ini beserta semua petaknya? Tindakan ini tidak dapat dibatalkan.');">
+                        <form method="post" action="{% url 'admin_board_delete' board.id %}" style="display: inline;" onsubmit="return confirm('Hapus papan ini beserta SEMUA petak dan berkas gambarnya? Tindakan ini tidak dapat dibatalkan.');">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm" style="background: rgba(248, 113, 113, 0.2); color: #fecaca;" title="Hapus papan">
                                 <i class="fa-solid fa-trash"></i> Hapus
@@ -84,7 +113,7 @@
             {% empty %}
             <tr>
                 <td colspan="6" style="text-align: center; padding: 2rem;">
-                    Belum ada papan. <a href="{% url 'admin_board_new' %}" style="color: var(--primary);">Buat papan pertama</a> lewat form lengkap.
+                    Belum ada papan. Buka <strong>Tambah papan baru</strong> di atas atau <a href="{% url 'admin_board_new' %}" style="color: var(--primary);">form lengkap</a>.
                 </td>
             </tr>
             {% endfor %}

@@ -800,7 +800,7 @@
     html += "</div>";
     if (!boardsPayload.length) {
       html +=
-        '<p style="margin-top:1rem;color:rgba(210,204,192,0.75);font-size:0.85rem;line-height:1.45;">Belum ada papan aktif dengan petak. Di admin buka <strong>Atur petak</strong> lalu <strong>Tambah papan</strong> / <strong>Generate</strong>, atau lanjut <strong>Papan Jakarta</strong> (dari kode).</p>';
+        '<p style="margin-top:1rem;color:rgba(210,204,192,0.75);font-size:0.85rem;line-height:1.45;">Belum ada papan aktif dengan petak. Di admin buka <code>/admin/boards/</code> lalu <strong>Tambah papan baru</strong> atau <strong>Atur petak</strong> → <strong>Generate</strong>, atau lanjut <strong>Papan Jakarta</strong> (dari kode).</p>';
     }
     host.innerHTML = html;
   }

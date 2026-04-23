@@ -12,7 +12,6 @@ urlpatterns = [
     path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
     path('admin/users/', admin_views.admin_users, name='admin_users'),
     path('admin/boards/', admin_views.admin_board_list, name='admin_boards'),
-    path('admin/boards/quick-add/', admin_views.admin_board_quick_add, name='admin_board_quick_add'),
     path('admin/boards/new/', admin_views.admin_board_new, name='admin_board_new'),
     path(
         'admin/boards/<int:board_id>/toggle-active/',

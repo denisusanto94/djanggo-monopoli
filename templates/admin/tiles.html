@@ -17,12 +17,14 @@
     .tile-price { color: #4ade80; font-weight: 700; }
     .tile-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
-    .add-board-panel {
+    .add-tile-panel {
         margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: 1rem;
         background: rgba(255, 255, 255, 0.03);
     }
-    .add-board-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.85rem; }
-    .add-board-form .form-input { flex: 1; min-width: 160px; margin: 0; }
+    .add-tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; align-items: end; }
+    .add-tile-grid .form-group { margin-bottom: 0; }
+    .add-tile-grid label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .add-tile-grid .form-input { width: 100%; margin: 0; }
 </style>
 {% endblock %}
 
@@ -33,20 +35,59 @@
     </a>
 </div>
 
-<div class="add-board-panel">
-    <h3 style="margin: 0 0 0.35rem; font-size: 1.05rem;">Tambah papan baru</h3>
+<div class="add-tile-panel">
+    <h3 style="margin: 0 0 0.35rem; font-size: 1.05rem;">Tambah petak baru</h3>
     <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
-        Tambah papan hanya dari halaman atur petak ini. Setelah disimpan Anda dibawa ke atur petak papan yang baru.
+        Posisi harus unik per papan (biasanya 0–31). Setelah ditambah, sunting detail lewat <strong>Edit</strong>.
     </p>
-    <form method="post" action="{% url 'admin_board_quick_add' %}" class="add-board-form">
+    <form method="post" action="{% url 'admin_tiles' board.id %}">
         {% csrf_token %}
-        <input type="hidden" name="return_board_id" value="{{ board.id }}">
-        <input type="text" class="form-input" name="quick_name" placeholder="Nama papan baru" maxlength="100" required aria-label="Nama papan baru">
-        <input type="text" class="form-input" name="quick_description" placeholder="Deskripsi opsional" maxlength="500">
-        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah papan</button>
-        <a href="{% url 'admin_board_new' %}" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: var(--text); white-space: nowrap;">
-            <i class="fa-solid fa-file-lines"></i> Form lengkap
-        </a>
+        <input type="hidden" name="action" value="add_tile">
+        <div class="add-tile-grid">
+            <div class="form-group" style="margin: 0;">
+                <label for="tile_name">Nama petak</label>
+                <input class="form-input" id="tile_name" name="tile_name" type="text" maxlength="100" required placeholder="Contoh: Properti Baru">
+            </div>
+            <div class="form-group">
+                <label for="tile_position">Posisi</label>
+                <input class="form-input" id="tile_position" name="tile_position" type="number" min="0" max="255" required placeholder="0">
+            </div>
+            <div class="form-group">
+                <label for="tile_type">Jenis</label>
+                <select class="form-input" id="tile_type" name="tile_type">
+                    {% for val, label in tile_types %}
+                    <option value="{{ val }}" {% if val == 'PROPERTY' %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tile_code">Kode (opsional)</label>
+                <input class="form-input" id="tile_code" name="tile_code" type="text" maxlength="64" placeholder="Otomatis dari posisi jika kosong">
+            </div>
+            <div class="form-group">
+                <label for="tile_path_line">Path line (1–4)</label>
+                <input class="form-input" id="tile_path_line" name="tile_path_line" type="number" min="1" max="4" value="1">
+            </div>
+            <div class="form-group">
+                <label for="tile_group_color">Warna grup (hex)</label>
+                <input class="form-input" id="tile_group_color" name="tile_group_color" type="text" maxlength="32" placeholder="#3498db">
+            </div>
+            <div class="form-group">
+                <label for="tile_price">Harga</label>
+                <input class="form-input" id="tile_price" name="tile_price" type="number" min="0" value="0">
+            </div>
+            <div class="form-group">
+                <label for="tile_rent_base">Sewa dasar</label>
+                <input class="form-input" id="tile_rent_base" name="tile_rent_base" type="number" min="0" value="0">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="tile_description">Deskripsi (opsional)</label>
+                <input class="form-input" id="tile_description" name="tile_description" type="text" maxlength="500" placeholder="Keterangan singkat">
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah petak</button>
+            </div>
+        </div>
     </form>
 </div>
 
@@ -107,7 +148,7 @@
     </div>
     {% empty %}
     <div class="content-card" style="grid-column: 1 / -1; text-align: center;">
-        <p>Belum ada petak. Klik <strong>Generate 32 petak dari template</strong> di atas.</p>
+        <p>Belum ada petak. Gunakan form di atas atau <strong>Generate 32 petak dari template</strong>.</p>
     </div>
     {% endfor %}
 </div>

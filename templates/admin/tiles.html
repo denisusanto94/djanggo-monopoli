@@ -5,64 +5,24 @@
 
 {% block extra_css %}
 <style>
-    .tile-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
+    .tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .tile-card { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 1rem; overflow: hidden; transition: transform 0.2s; }
+    .tile-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+    .tile-preview { height: 120px; background: #0f172a; display: flex; align-items: center; justify-content: center; position: relative; }
+    .tile-preview img { max-height: 80%; max-width: 80%; object-fit: contain; }
+    .tile-type-badge { position: absolute; top: 0.5rem; right: 0.5rem; font-size: 0.65rem; }
+    .tile-info { padding: 1.25rem; }
+    .tile-info h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .tile-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted); }
+    .tile-price { color: #4ade80; font-weight: 700; }
+    .tile-actions { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+    .add-board-panel {
+        margin-bottom: 1.5rem; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.03);
     }
-    .tile-card {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        overflow: hidden;
-        transition: transform 0.2s;
-    }
-    .tile-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--primary);
-    }
-    .tile-preview {
-        height: 120px;
-        background: #0f172a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-    .tile-preview img {
-        max-height: 80%;
-        max-width: 80%;
-        object-fit: contain;
-    }
-    .tile-type-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        font-size: 0.65rem;
-    }
-    .tile-info {
-        padding: 1.25rem;
-    }
-    .tile-info h3 {
-        font-size: 1.1rem;
-        margin-bottom: 0.5rem;
-    }
-    .tile-meta {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        color: var(--text-muted);
-    }
-    .tile-price {
-        color: #4ade80;
-        font-weight: 700;
-    }
-    .tile-actions {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
+    .add-board-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.85rem; }
+    .add-board-form .form-input { flex: 1; min-width: 160px; margin: 0; }
 </style>
 {% endblock %}
 
@@ -73,14 +33,50 @@
     </a>
 </div>
 
+<div class="add-board-panel">
+    <h3 style="margin: 0 0 0.35rem; font-size: 1.05rem;">Tambah papan baru</h3>
+    <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+        Tambah papan hanya dari halaman atur petak ini. Setelah disimpan Anda dibawa ke atur petak papan yang baru.
+    </p>
+    <form method="post" action="{% url 'admin_board_quick_add' %}" class="add-board-form">
+        {% csrf_token %}
+        <input type="hidden" name="return_board_id" value="{{ board.id }}">
+        <input type="text" class="form-input" name="quick_name" placeholder="Nama papan baru" maxlength="100" required aria-label="Nama papan baru">
+        <input type="text" class="form-input" name="quick_description" placeholder="Deskripsi opsional" maxlength="500">
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tambah papan</button>
+        <a href="{% url 'admin_board_new' %}" class="btn btn-sm" style="background: rgba(255,255,255,0.08); color: var(--text); white-space: nowrap;">
+            <i class="fa-solid fa-file-lines"></i> Form lengkap
+        </a>
+    </form>
+</div>
+
+{% if board.is_builtin %}
+<p style="margin: 0 0 1.25rem; padding: 0.75rem 1rem; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 0.75rem; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5;">
+    Ini adalah <strong style="color: #c7d2fe;">Papan Jakarta (bawaan)</strong> — default permainan jika aktif dan punya petak. Edit di sini mengubah data pemain; tombol <strong>Generate</strong> mengisi ulang dari <code>board/tiles.py</code>.
+</p>
+{% endif %}
+
+<div class="toolbar">
+    <form method="post" action="{% url 'admin_tiles' board.id %}" id="form-generate-default" style="display: none;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="generate_default">
+    </form>
+    <button type="button" class="btn btn-primary" id="btn-generate">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate 32 petak dari template
+    </button>
+    <span style="color: var(--text-muted); font-size: 0.875rem;">Mengisi ulang semua petak dari <code>board/tiles.py</code>.</span>
+</div>
+
 <div class="tile-grid">
     {% for tile in tiles %}
     <div class="tile-card">
         <div class="tile-preview" {% if tile.group_color %}style="border-top: 5px solid {{ tile.group_color }};"{% endif %}>
-            {% if tile.image %}
+            {% if tile.display_mode == 'customize' and tile.image %}
                 <img src="{{ tile.image.url }}" alt="{{ tile.name }}">
+            {% elif tile.display_mode == 'customize' %}
+                <i class="fa-solid fa-image fa-3x" style="opacity: 0.35;" title="Kustom — belum ada gambar"></i>
             {% else %}
-                <i class="fa-solid fa-image fa-3x" style="opacity: 0.2;"></i>
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 0.5rem;">Statis<br><small>aset bawaan</small></span>
             {% endif %}
             <span class="badge badge-success tile-type-badge">{{ tile.get_tile_type_display }}</span>
         </div>
@@ -89,21 +85,37 @@
                 <h3>{{ tile.name }}</h3>
                 <span style="color: var(--text-muted);">#{{ tile.position }}</span>
             </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.35rem 0;">
+                {{ tile.get_display_mode_display }} · line {{ tile.path_line }}
+            </p>
             <div class="tile-meta">
                 <span>Harga: <span class="tile-price">Rp {{ tile.price }}</span></span>
-                <span>Sewa: <span>Rp {{ tile.rent_base }}</span></span>
+                <span>Sewa dasar: <span>Rp {{ tile.rent_base }}</span></span>
             </div>
             <div class="tile-actions">
-                <button class="btn btn-primary btn-sm" style="flex: 1;"><i class="fa-solid fa-edit"></i> Edit</button>
-                <button class="btn btn-sm" style="background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-image"></i> Gambar</button>
+                <a href="{% url 'admin_tile_edit' board.id tile.id %}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
+                    <i class="fa-solid fa-pen"></i> Edit
+                </a>
+                <form method="post" action="{% url 'admin_tile_delete' board.id tile.id %}" style="display: inline;" onsubmit="return confirm('Hapus petak ini?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm" style="background: rgba(248,113,113,0.2); color: #fecaca;">
+                        <i class="fa-solid fa-trash"></i> Hapus
+                    </button>
+                </form>
             </div>
         </div>
     </div>
     {% empty %}
     <div class="content-card" style="grid-column: 1 / -1; text-align: center;">
-        <p>Belum ada petak yang diatur untuk papan ini.</p>
-        <button class="btn btn-primary" style="margin-top: 1rem;"><i class="fa-solid fa-magic"></i> Generate Petak Standard (40)</button>
+        <p>Belum ada petak. Klik <strong>Generate 32 petak dari template</strong> di atas.</p>
     </div>
     {% endfor %}
 </div>
+
+<script>
+  document.getElementById("btn-generate")?.addEventListener("click", function () {
+    if (!confirm("Generate akan menghapus semua petak di papan ini lalu mengisi ulang dari template. Lanjutkan?")) return;
+    document.getElementById("form-generate-default").submit();
+  });
+</script>
 {% endblock %}

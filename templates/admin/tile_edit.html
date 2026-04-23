@@ -1,0 +1,91 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Edit Petak{% endblock %}
+{% block header_title %}Edit Petak: {{ tile.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="{% url 'admin_tiles' board.id %}" style="color: var(--text-muted); text-decoration: none;">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke pengaturan petak
+    </a>
+</div>
+
+<div class="content-card" style="max-width: 720px;">
+    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem;">Posisi petak: <strong>#{{ tile.position }}</strong></p>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Nama</label>
+            <input class="form-input" type="text" id="name" name="name" value="{{ tile.name }}" maxlength="100" required>
+        </div>
+        <div class="form-group">
+            <label for="code">Kode (slug)</label>
+            <input class="form-input" type="text" id="code" name="code" value="{{ tile.code }}" maxlength="64">
+        </div>
+        <div class="form-group">
+            <label for="tile_type">Jenis petak</label>
+            <select class="form-input" id="tile_type" name="tile_type">
+                {% for val, label in tile_types %}
+                <option value="{{ val }}" {% if tile.tile_type == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="display_mode">Tampilan gambar</label>
+            <select class="form-input" id="display_mode" name="display_mode">
+                {% for val, label in display_modes %}
+                <option value="{{ val }}" {% if tile.display_mode == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="path_line">Path line (1–4)</label>
+            <input class="form-input" type="number" id="path_line" name="path_line" min="1" max="4" value="{{ tile.path_line }}">
+        </div>
+        <div class="form-group">
+            <label for="group_color">Warna grup (hex)</label>
+            <input class="form-input" type="text" id="group_color" name="group_color" value="{{ tile.group_color|default:'' }}" maxlength="32" placeholder="#3498db">
+        </div>
+        <div class="form-group">
+            <label for="price">Harga beli</label>
+            <input class="form-input" type="number" id="price" name="price" min="0" value="{{ tile.price }}">
+        </div>
+        <div class="form-group">
+            <label>Sewa</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <input class="form-input" type="number" name="rent_base" placeholder="Dasar" value="{{ tile.rent_base }}">
+                <input class="form-input" type="number" name="rent_1house" placeholder="1 rumah" value="{{ tile.rent_1house }}">
+                <input class="form-input" type="number" name="rent_2house" placeholder="2 rumah" value="{{ tile.rent_2house }}">
+                <input class="form-input" type="number" name="rent_3house" placeholder="3 rumah" value="{{ tile.rent_3house }}">
+                <input class="form-input" type="number" name="rent_4house" placeholder="4 rumah" value="{{ tile.rent_4house }}">
+                <input class="form-input" type="number" name="rent_hotel" placeholder="Hotel" value="{{ tile.rent_hotel }}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="house_price">Harga rumah</label>
+            <input class="form-input" type="number" id="house_price" name="house_price" min="0" value="{{ tile.house_price }}">
+        </div>
+        <div class="form-group">
+            <label for="hotel_price">Harga hotel</label>
+            <input class="form-input" type="number" id="hotel_price" name="hotel_price" min="0" value="{{ tile.hotel_price }}">
+        </div>
+        <div class="form-group">
+            <label for="description">Deskripsi / ketentuan</label>
+            <textarea class="form-input" id="description" name="description" rows="3">{{ tile.description }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="image">Gambar kustom (mode Kustom)</label>
+            <input class="form-input" type="file" id="image" name="image" accept="image/*">
+            {% if tile.image %}
+            <label style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+                <input type="checkbox" name="clear_image" value="1"> Hapus gambar saat ini
+            </label>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <a href="{% url 'admin_tiles' board.id %}" class="btn" style="background: rgba(255,255,255,0.08); color: var(--text);">Batal</a>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Simpan</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

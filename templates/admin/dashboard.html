@@ -15,7 +15,7 @@
     <div class="stat-card">
         <div class="stat-icon"><i class="fa-solid fa-map"></i></div>
         <div class="stat-info">
-            <h3>Active Boards</h3>
+            <h3>Boards</h3>
             <p>{{ stats.boards }}</p>
         </div>
     </div>
@@ -38,8 +38,42 @@
 <div class="content-card">
     <h2>Selamat Datang di Monopoly Superapps Admin</h2>
     <p style="color: var(--text-muted); margin-top: 1rem;">
-        Gunakan menu di samping kiri untuk mengelola pengguna, papan permainan, karakter, dan kemampuan kartu.
-        Dashboard ini memungkinkan Anda untuk mengatur setiap detail dari permainan monopoli 3D Anda.
+        Gunakan menu di samping untuk mengelola pengguna, papan, karakter, dan ability cards.
     </p>
+</div>
+
+<div class="content-card" style="margin-top: 1.5rem;">
+    <h2 style="margin-bottom: 0.75rem;">Papan permainan</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;">
+        Termasuk <strong>Papan Jakarta</strong> (bawaan). <a href="{% url 'admin_boards' %}" style="color: var(--primary);">Daftar lengkap papan</a>
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Nama</th>
+                <th>Tipe</th>
+                <th>Aktif</th>
+                <th>Terakhir diupdate</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for board in boards %}
+            <tr>
+                <td><strong>{{ board.name }}</strong></td>
+                <td>{% if board.is_builtin %}<span style="color: #a5b4fc;">Bawaan (Jakarta)</span>{% else %}Kustom{% endif %}</td>
+                <td>{% if board.is_active %}Ya{% else %}Tidak{% endif %}</td>
+                <td>{{ board.updated_at|date:"d M Y H:i" }}</td>
+                <td>
+                    <a href="{% url 'admin_tiles' board.id %}" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-gears"></i> Atur petak
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">Belum ada papan.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

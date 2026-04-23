@@ -318,7 +318,7 @@
             <a href="{% url 'admin_users' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
                 <i class="fa-solid fa-users"></i> Management User
             </a>
-            <a href="{% url 'admin_boards' %}" class="menu-item {% if 'admin_boards' in request.resolver_match.url_name or 'admin_tiles' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="{% url 'admin_boards' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_boards' or request.resolver_match.url_name == 'admin_tiles' or request.resolver_match.url_name == 'admin_board_new' or request.resolver_match.url_name == 'admin_tile_edit' or request.resolver_match.url_name == 'admin_board_toggle' or request.resolver_match.url_name == 'admin_board_delete' %}active{% endif %}">
                 <i class="fa-solid fa-map"></i> Pengaturan Papan
             </a>
             <a href="{% url 'admin_characters' %}" class="menu-item {% if request.resolver_match.url_name == 'admin_characters' %}active{% endif %}">
@@ -343,6 +343,16 @@
                 <div class="user-avatar">{{ request.user.username|first|upper }}</div>
             </div>
         </div>
+
+        {% if messages %}
+        <ul class="admin-messages" style="list-style: none; margin: 0 0 1.25rem; padding: 0;">
+            {% for message in messages %}
+            <li style="padding: 0.65rem 1rem; margin-bottom: 0.5rem; border-radius: 0.75rem; font-size: 0.9rem; {% if message.tags == 'success' %}background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35);{% elif message.tags == 'error' %}background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);{% else %}background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);{% endif %}">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
         {% block content %}{% endblock %}
     </div>

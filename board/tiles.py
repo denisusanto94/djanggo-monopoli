@@ -1,21 +1,13 @@
-"""Definisi 32 petak papan (9+7+9+7).
+"""Definisi 32 petak papan Jakarta (9+7+9+7).
+
+Tema: objek wisata & landmark DKI Jakarta. Properti (16 petak) diurut dari yang relatif
+kurang ramai wisatawan hingga ikon paling populer, mengikuti kenaikan harga/sewa.
 
 Urutan permainan: petak 0 (Mulai / tile_01) di pojok kiri bawah grid (9,1),
 lalu naik sisi kiri, baris atas kiri→kanan, sisi kanan turun, baris bawah
 kanan→kiri sampai kembali ke Mulai (berlawanan arah jarum jam di grid).
 
-Empat sisi jalur (path_line 1–4), searah putaran papan:
-  Line 1 — bawah ke tengah kiri: baris 9, kolom 1..8 (Mulai … ke kiri dari pojok kanan bawah).
-  Line 2 — tengah kiri ke atas: kolom 1, baris 1..8 (naik, termasuk Pulau Terpencil).
-  Line 3 — atas ke tengah kanan: baris 1, kolom 2..9 (kanan sepanjang atas).
-  Line 4 — tengah kanan ke bawah: kolom 9, baris 2..9 (turun, termasuk Keliling Dunia).
-
-Sudut rotasi kartu per sisi (CSS, setelah lawan-putar grid): line 1 = -45°, line 2 = 45°,
-line 3 = -45°, line 4 = 45°.
-
-Sudut: 8 Pulau Terpencil (1,1), 16 Piala Dunia Marmer (1,9), 24 Keliling Dunia (9,9).
-
-Kota (properti) di 16 slot jalur diurut harga naik dari termurah ke termahal."""
+Sudut: 8 Pulau Terpencil (1,1), 16 Piala Dunia Marmer (1,9), 24 Keliling Jabodetabek (9,9)."""
 
 from __future__ import annotations
 
@@ -71,37 +63,37 @@ def _asset(n: int) -> str:
 _RAW: list[tuple] = [
     # code,               name,                kind,        price, color,      rent,  r1h,  r2h,  r3h,   r4h,  rhotel, hcost, desc
     ("start",            "Mulai",              "start",      None, "#3498db",  None, None, None, None,   None,  None,  None,  "Lewati petak Mulai dan kumpulkan Rp 200!"),
-    ("banjarmasin",      "Banjarmasin",        "property",    280, "#1abc9c",    22,   60,  180,  500,    720,   900,    50,   None),
+    ("sumpah_pemuda",    "Museum Sumpah Pemuda", "property",  280, "#1abc9c",    22,   60,  180,  500,    720,   900,    50,   None),
     ("chance_1",         "Kesempatan",         "chance",     None, "#9b59b6",  None, None, None, None,   None,  None,  None,  "Ambil kartu Kesempatan dan ikuti instruksinya!"),
-    ("pontianak",        "Pontianak",          "property",    300, "#1abc9c",    24,   66,  200,  560,    800,  1000,    50,   None),
+    ("taman_prasasti",   "Taman Museum Prasasti", "property", 300, "#1abc9c",    24,   66,  200,  560,    800,  1000,    50,   None),
     ("tax_income",       "Pajak Penghasilan",  "tax",         200, None,        None, None, None, None,   None,  None,  None,  "Bayar pajak penghasilan sebesar Rp 200."),
-    ("padang",           "Padang",             "property",    320, "#1abc9c",    26,   72,  220,  600,    900,  1100,    50,   None),
+    ("setu_babakan",     "Setu Babakan Betawi", "property",   320, "#1abc9c",    26,   72,  220,  600,    900,  1100,    50,   None),
     ("festival_1",       "Festival",           "festival",   None, "#e91e63",  None, None, None, None,   None,  None,  None,  "Selamat! Kamu berada di Festival. Nikmati hiburan!"),
-    ("balikpapan",       "Balikpapan",         "property",    340, "#f39c12",    28,   84,  250,  700,   1000,  1200,   100,   None),
+    ("lap_banteng",      "Lapangan Banteng",   "property",    340, "#f39c12",    28,   84,  250,  700,   1000,  1200,   100,   None),
     ("corner_jail",      "Pulau Terpencil",    "jail",        None, "#7f8c8d",  None, None, None, None,   None,  None,  None,  "Hanya berkunjung — atau terkurung di Pulau Terpencil!"),
-    ("malang",           "Malang",             "property",    360, "#f39c12",    30,   90,  270,  750,   1100,  1300,   100,   None),
+    ("tanah_abang",      "Pasar Tanah Abang",  "property",    360, "#f39c12",    30,   90,  270,  750,   1100,  1300,   100,   None),
     ("chance_2",         "Kejutan",            "chance",      None, "#9b59b6",  None, None, None, None,   None,  None,  None,  "Ambil kartu Kejutan — bisa beruntung atau sial!"),
-    ("semarang",         "Semarang",           "property",    380, "#f39c12",    32,   96,  300,  800,   1150,  1400,   100,   None),
-    ("airport_1",        "Bandara A",          "airport",     400, "#34495e",   25,  None, None, None,   None,  None,  None,  "Bandara: sewa Rp 25 per bandara yang kamu miliki × 25."),
-    ("denpasar",         "Denpasar",           "property",    400, "#f39c12",    35,  100,  320,  850,   1200,  1500,   100,   None),
+    ("glodok",           "Glodok Chinatown",   "property",    380, "#f39c12",    32,   96,  300,  800,   1150,  1400,   100,   None),
+    ("airport_halim",    "Bandara Halim",      "airport",     400, "#34495e",   25,  None, None, None,   None,  None,  None,  "Bandara: sewa Rp 25 per bandara yang kamu miliki × 25."),
+    ("museum_nasional",  "Museum Nasional",    "property",    400, "#f39c12",    35,  100,  320,  850,   1200,  1500,   100,   None),
     ("tax_luxury",       "Pajak Mewah",        "tax",         150, None,        None, None, None, None,   None,  None,  None,  "Bayar pajak kemewahan sebesar Rp 150."),
-    ("manado",           "Manado",             "property",    420, "#2ecc71",    40,  110,  340,  900,   1300,  1600,   150,   None),
+    ("museum_wayang",    "Museum Wayang",      "property",    420, "#2ecc71",    40,  110,  340,  900,   1300,  1600,   150,   None),
     ("marble_cup",       "Piala Dunia Marmer", "festival",   None, "#8e44ad",  None, None, None, None,   None,  None,  None,  "Festival Piala Dunia Marmer! Pesta gratis untuk semua pemain."),
-    ("palembang",        "Palembang",          "property",    440, "#2ecc71",    44,  120,  360,  950,   1400,  1700,   150,   None),
+    ("museum_sejarah",   "Museum Sejarah Jakarta", "property", 440, "#2ecc71",    44,  120,  360,  950,   1400,  1700,   150,   None),
     ("chance_3",         "Lucky Card",         "chance",      None, "#9b59b6",  None, None, None, None,   None,  None,  None,  "Ambil kartu Lucky Card — semoga keberuntungan bersamamu!"),
-    ("makassar",         "Makassar",           "property",    460, "#2ecc71",    48,  130,  390, 1000,   1500,  1800,   150,   None),
+    ("ragunan",          "Kebun Binatang Ragunan", "property", 460, "#2ecc71",    48,  130,  390, 1000,   1500,  1800,   150,   None),
     ("parking",          "Parkir Gratis",      "parking",    None, "#95a5a6",  None, None, None, None,   None,  None,  None,  "Istirahat sebentar! Parkir Gratis, tidak ada yang terjadi."),
-    ("tarakan",          "Tarakan",            "property",    470, "#3498db",    44,  100,  300,  750,   1100,  1300,   150,   None),
+    ("muara_angke",      "Wisata Muara Angke", "property",    470, "#3498db",    44,  100,  300,  750,   1100,  1300,   150,   None),
     ("festival_2",       "Konser",             "festival",   None, "#e91e63",  None, None, None, None,   None,  None,  None,  "Konser spektakuler! Bersenang-senanglah bersama teman."),
-    ("yogyakarta",       "Yogyakarta",         "property",    480, "#3498db",    48,  110,  330,  800,   1200,  1400,   150,   None),
-    ("world_tour",       "Keliling Dunia",     "travel",     None, "#16a085",  None, None, None, None,   None,  None,  None,  "Keliling Dunia! Pergi ke petak mana saja yang kamu mau."),
-    ("bandung",          "Bandung",            "property",    500, "#3498db",    52,  120,  360,  850,   1300,  1550,   200,   None),
+    ("gbk",              "Gelora Bung Karno",  "property",    480, "#3498db",    48,  110,  330,  800,   1200,  1400,   150,   None),
+    ("world_tour",       "Keliling Jabodetabek", "travel",   None, "#16a085",  None, None, None, None,   None,  None,  None,  "Keliling Jabodetabek! Pilih petak tujuanmu di wilayah DKI & sekitarnya."),
+    ("grand_hi",         "Grand Indonesia & Bundaran HI", "property", 500, "#3498db",    52,  120,  360,  850,   1300,  1550,   200,   None),
     ("chance_4",         "Misteri",            "chance",      None, "#9b59b6",  None, None, None, None,   None,  None,  None,  "Ambil kartu Misteri — isi kartu rahasia menanti!"),
-    ("medan",            "Medan",              "property",    520, "#2ecc71",    56,  130,  390,  900,   1400,  1700,   200,   None),
-    ("airport_2",        "Bandara B",          "airport",     350, "#34495e",   25,  None, None, None,   None,  None,  None,  "Bandara: sewa Rp 25 per bandara yang kamu miliki × 25."),
-    ("surabaya",         "Surabaya",           "property",    560, "#3498db",    60,  150,  450, 1000,   1500,  2000,   200,   None),
+    ("tmii",             "Taman Mini Indonesia Indah", "property", 520, "#2ecc71",    56,  130,  390,  900,   1400,  1700,   200,   None),
+    ("airport_soetta",   "Bandara Soekarno-Hatta", "airport", 350, "#34495e",   25,  None, None, None,   None,  None,  None,  "Bandara: sewa Rp 25 per bandara yang kamu miliki × 25."),
+    ("ancol",            "Taman Impian Jaya Ancol", "property", 560, "#3498db",    60,  150,  450, 1000,   1500,  2000,   200,   None),
     ("corner_go_bonus",  "Bonus Roda",         "chance",      None, "#9b59b6",  None, None, None, None,   None,  None,  None,  "Bonus Roda! Putar roda keberuntungan dan dapatkan hadiah."),
-    ("jakarta",          "Jakarta",            "property",    600, "#e74c3c",    70,  180,  540, 1200,   1800,  2500,   200,   None),
+    ("monas",            "Monumen Nasional (Monas)", "property", 600, "#e74c3c",    70,  180,  540, 1200,   1800,  2500,   200,   None),
 ]
 # fmt: on
 

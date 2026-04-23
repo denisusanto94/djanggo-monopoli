@@ -78,6 +78,11 @@ class Board(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_builtin = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text='Papan bawaan aplikasi (satu: Papan Jakarta). Muncul di admin & permainan.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -87,30 +92,63 @@ class Board(models.Model):
     def __str__(self):
         return self.name
 
+
 class Tile(models.Model):
+    """Petak papan — selaras template permainan & admin."""
+
     TILE_TYPES = (
-        ('GO', 'Go'),
-        ('PROPERTY', 'Property'),
-        ('RAILROAD', 'Railroad'),
-        ('UTILITY', 'Utility'),
-        ('TAX', 'Tax'),
-        ('CHANCE', 'Chance'),
-        ('COMMUNITY_CHEST', 'Community Chest'),
-        ('JAIL', 'Jail'),
-        ('FREE_PARKING', 'Free Parking'),
-        ('GO_TO_JAIL', 'Go To Jail'),
+        ('GO', 'Mulai (GO)'),
+        ('PROPERTY', 'Properti'),
+        ('RAILROAD', 'Rel'),
+        ('UTILITY', 'Utilitas'),
+        ('TAX', 'Pajak'),
+        ('CHANCE', 'Kesempatan / Kartu'),
+        ('COMMUNITY_CHEST', 'Dana Umum'),
+        ('JAIL', 'Penjara / Kunjungan'),
+        ('FREE_PARKING', 'Parkir Gratis'),
+        ('GO_TO_JAIL', 'Masuk Penjara'),
+        ('AIRPORT', 'Bandara'),
+        ('FESTIVAL', 'Festival'),
+        ('TRAVEL', 'Perjalanan / Keliling'),
     )
+
+    DISPLAY_MODE = (
+        ('static', 'Statis (aset bawaan)'),
+        ('customize', 'Kustom (unggah gambar)'),
+    )
+
     board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='tiles')
     name = models.CharField(max_length=100)
-    position = models.IntegerField() # 0 to 39
-    tile_type = models.CharField(max_length=20, choices=TILE_TYPES)
-    group_color = models.CharField(max_length=20, blank=True, null=True) # hex or name
+    code = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text='Kode unik petak (mis. start, monas); untuk data & CSS.',
+    )
+    position = models.IntegerField()
+    tile_type = models.CharField(max_length=24, choices=TILE_TYPES)
+    display_mode = models.CharField(
+        max_length=12,
+        choices=DISPLAY_MODE,
+        default='static',
+        help_text='Statis: gambar dari aset standar. Kustom: unggah gambar petak.',
+    )
+    path_line = models.PositiveSmallIntegerField(
+        default=1,
+        help_text='Sisi jalur di papan 9×9: 1=bawah, 2=kiri, 3=atas, 4=kanan',
+    )
+    group_color = models.CharField(max_length=32, blank=True, null=True)
     price = models.IntegerField(default=0)
-    rent_base = models.IntegerField(default=0)
-    house_price = models.IntegerField(default=0)
-    hotel_price = models.IntegerField(default=0)
+    rent_base = models.IntegerField(default=0, help_text='Sewa dasar (tanah kosong)')
+    rent_1house = models.IntegerField(default=0)
+    rent_2house = models.IntegerField(default=0)
+    rent_3house = models.IntegerField(default=0)
+    rent_4house = models.IntegerField(default=0)
+    rent_hotel = models.IntegerField(default=0)
+    house_price = models.IntegerField(default=0, help_text='Biaya bangun rumah / upgrade')
+    hotel_price = models.IntegerField(default=0, help_text='Biaya upgrade ke hotel (jika berbeda)')
     image = models.ImageField(upload_to='tiles/', blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, help_text='Ketentuan / teks petak')
 
     class Meta:
         db_table = 'tiles'
@@ -118,7 +156,7 @@ class Tile(models.Model):
         unique_together = ('board', 'position')
 
     def __str__(self):
-        return f"{self.name} ({self.position})"
+        return f'{self.name} ({self.position})'
 
 class Menu(models.Model):
     title = models.CharField(max_length=100)

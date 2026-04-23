@@ -8,7 +8,7 @@
   <title>Monopoli Game</title>
   <link rel="stylesheet" href="{% static 'board/css/board.css' %}?v=20260422n">
 </head>
-<body>
+<body{% if setup_skip_board_pick %} data-skip-board-pick="true"{% endif %} data-selected-board-name="{{ selected_board_name|default:'' }}">
   <div class="app">
     <main class="stage">
       <div class="board-shell board-shell--diamond">
@@ -29,6 +29,17 @@
               {% if t.color %}
               <div class="tile-strip"></div>
               {% endif %}
+              {% if t.custom_image_url %}
+              <img
+                class="tile-art"
+                src="{{ t.custom_image_url }}"
+                alt=""
+                width="160"
+                height="160"
+                loading="lazy"
+                draggable="false"
+              >
+              {% else %}
               <img
                 class="tile-art"
                 src="{% static t.asset_file %}?v=20260422e"
@@ -38,6 +49,7 @@
                 loading="lazy"
                 draggable="false"
               >
+              {% endif %}
               <div class="tile-meta">
                 <span class="tile-name">{{ t.name }}</span>
                 {% if t.price %}
@@ -69,6 +81,7 @@
                 </div>
                 <button type="button" class="btn-parity btn-parity--lgr" id="btn-genap" tabindex="-1" aria-hidden="true">Genap</button>
               </div>
+              <p id="board-selected-banner" class="hub-hint" style="display: none;"></p>
               <p class="hub-hint">Klik petak untuk detail. Dari Mulai: naik kiri, atas, kanan turun, bawah kanan→kiri.</p>
             </div>
           </div>
@@ -171,11 +184,17 @@
 
   <script id="tiles-data" type="application/json">{{ tiles_json|safe }}</script>
   <script id="characters-data" type="application/json">{{ characters_json|safe }}</script>
+  <script id="boards-data" type="application/json">{{ boards_json|safe }}</script>
 
   <!-- Setup Game Overlay -->
   <div id="game-setup-overlay" class="setup-overlay">
     <div class="setup-card">
-      <div id="setup-step-1" class="setup-step active">
+      <div id="setup-step-0" class="setup-step{% if not setup_skip_board_pick %} active{% endif %}">
+        <h1 class="setup-title">Pilih Papan</h1>
+        <p class="setup-subtitle">Pilih papan dari admin (aktif &amp; punya petak), atau <strong>Papan Jakarta</strong> bawaan.</p>
+        <div id="board-setup-grid" class="player-count-grid" style="flex-direction: column; align-items: stretch;"></div>
+      </div>
+      <div id="setup-step-1" class="setup-step{% if setup_skip_board_pick %} active{% endif %}">
         <h1 class="setup-title">Monopoly Superapps</h1>
         <p class="setup-subtitle">Pilih jumlah pemain untuk memulai permainan</p>
         <div class="player-count-grid">

@@ -755,6 +755,79 @@
    * SETUP GAME LOGIC
    * ============================================================ */
   const characters = JSON.parse(el("characters-data").textContent);
+  const boardsDataEl = document.getElementById("boards-data");
+  let boardsPayload = [];
+  if (boardsDataEl && boardsDataEl.textContent.trim()) {
+    try {
+      boardsPayload = JSON.parse(boardsDataEl.textContent);
+    } catch (_) {
+      boardsPayload = [];
+    }
+  }
+
+  function renderBoardStep0() {
+    const host = document.getElementById("board-setup-grid");
+    if (!host) return;
+    const esc = (s) =>
+      String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/"/g, "&quot;");
+    let html = '<div class="player-count-grid" style="display:flex;flex-wrap:wrap;gap:0.5rem;">';
+    const builtinBoard = boardsPayload.find((b) => b.is_builtin);
+    const otherBoards = boardsPayload.filter((b) => !b.is_builtin);
+    if (builtinBoard) {
+      html +=
+        '<button type="button" class="btn-setup" onclick="selectDbBoard(' +
+        builtinBoard.id +
+        ')">Papan Jakarta <small>(' +
+        builtinBoard.tile_count +
+        " petak)</small></button>";
+    } else {
+      html +=
+        '<button type="button" class="btn-setup" onclick="selectClassicBoard()">Papan Jakarta</button>';
+    }
+    otherBoards.forEach((b) => {
+      html +=
+        '<button type="button" class="btn-setup" onclick="selectDbBoard(' +
+        b.id +
+        ')">' +
+        esc(b.name) +
+        " <small>(" +
+        b.tile_count +
+        " petak)</small></button>";
+    });
+    html += "</div>";
+    if (!boardsPayload.length) {
+      html +=
+        '<p style="margin-top:1rem;color:rgba(210,204,192,0.75);font-size:0.85rem;line-height:1.45;">Belum ada papan aktif dengan petak. Di admin buka <strong>Atur petak</strong> lalu <strong>Tambah papan</strong> / <strong>Generate</strong>, atau lanjut <strong>Papan Jakarta</strong> (dari kode).</p>';
+    }
+    host.innerHTML = html;
+  }
+
+  window.selectDbBoard = function (id) {
+    const u = new URL(window.location.href);
+    u.searchParams.set("board", String(id));
+    window.location.href = u.pathname + u.search + u.hash;
+  };
+
+  window.selectClassicBoard = function () {
+    const builtin = boardsPayload.find((b) => b.is_builtin);
+    if (builtin) {
+      window.selectDbBoard(builtin.id);
+      return;
+    }
+    const s0 = el("setup-step-0");
+    const s1 = el("setup-step-1");
+    const banner = document.getElementById("board-selected-banner");
+    if (s0) s0.classList.remove("active");
+    if (s1) s1.classList.add("active");
+    if (banner) {
+      banner.textContent = "Papan: Jakarta (kode)";
+      banner.style.display = "block";
+    }
+  };
+
   let playerCount = 2;
   let players = [];
   let currentSetupPlayer = 0;
@@ -1034,6 +1107,17 @@
   }
 
   /* ============================================================ */
+
+  if (document.body && document.body.dataset.skipBoardPick === "true") {
+    const bn = document.body.dataset.selectedBoardName || "";
+    const banner = document.getElementById("board-selected-banner");
+    if (banner && bn) {
+      banner.textContent = "Papan: " + bn;
+      banner.style.display = "block";
+    }
+  } else {
+    renderBoardStep0();
+  }
 
   initOrbit();
 })();

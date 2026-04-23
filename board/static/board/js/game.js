@@ -397,17 +397,17 @@
   setActive(0);
 
   /** Kontrol orbit 3D — seret = akumulasi yaw/pitch (tak terbatas); Shift+seret = roll Z */
-  const LS_ORBIT_V3 = "mono.board3d.v4"; /* v4: default pitch 50° + persp 2200 */
+  const LS_ORBIT_V3 = "mono.board3d.v4"; /* v4: default pitch 50° + persp 2200 (legacy key) */
   const LS_ORBIT_V2 = "mono.board3d.v2";
   const LS_ORBIT_V1 = "mono.board3d.v1";
-  /** Default panel orbit: Y:0° X:50° Z:0°; perspektif dekat 2200px */
+  /** Default panel orbit: Y:0° X:42° Z:0°; perspektif ~3800px = papan lebih terbaca, pojok kurang menciut */
   const DEFAULT_ORBIT_YAW = 0;
-  const DEFAULT_ORBIT_PITCH = 50;
+  const DEFAULT_ORBIT_PITCH = 42;
   const DEFAULT_ORBIT_ROLL = 0;
-  const DEFAULT_ORBIT_PERSP = 2200;
+  const DEFAULT_ORBIT_PERSP = 3800;
   /** Pitch berlebihan = petak pojok terlalu menciut seperti "dilihat dari samping" */
   const MAX_PITCH = 68;
-  const ORBIT_PERSP_MIN = 2200;
+  const ORBIT_PERSP_MIN = 1600;
   const ORBIT_PERSP_MAX = 20000;
   /** Nilai yang dipakai versi joystick lama (v2) untuk pitch dari posisi knob */
   const MAX_PITCH_V2 = 26;
@@ -436,12 +436,6 @@
   let joyDragging = false;
   let knobNx = 0;
   let knobNy = 0;
-
-  function readBasePerspective() {
-    const raw = getComputedStyle(root).getPropertyValue("--iso-perspective").trim();
-    const m = /^([\d.]+)px$/i.exec(raw);
-    return m ? Math.round(Number.parseFloat(m[1])) : 16500;
-  }
 
   function knobMaxTravelPx() {
     if (!orbitJoystick || !orbitKnob) return 44;
@@ -612,7 +606,6 @@
     } catch (_) {
       stored = null;
     }
-    const base = readBasePerspective();
     if (
       stored &&
       stored.v === 3 &&
@@ -1023,6 +1016,7 @@
   /**
    * Posisi token mendekati sudut dalam jalur (menuju tengah papan), seperti cakram di referensi UI.
    * Beberapa pemain di petak sama direnggangkan tegak lurus arah "ke dalam".
+   * Koordinat di-clamp ke dalam bbox petak agar token (dan bayangan) tidak "offside".
    */
   function placeTokenOnCell(playerIdx, cellIndex) {
     const cell = document.querySelector(`.tile[data-index="${cellIndex}"]`);
@@ -1034,7 +1028,18 @@
     const w = cell.offsetWidth;
     const h = cell.offsetHeight;
     const line = Number(cell.dataset.pathLine) || 1;
-    const frac = 0.27;
+    const tw = token.offsetWidth || 32;
+    const th = token.offsetHeight || 32;
+    const inset = Math.max(tw, th) / 2 + 5;
+
+    let frac = 0.2;
+    if (line === 1 || line === 3) {
+      const cap = (h * 0.5 - inset) / Math.max(h, 1e-6);
+      frac = Math.min(frac, Math.max(0, cap));
+    } else if (line === 2 || line === 4) {
+      const cap = (w * 0.5 - inset) / Math.max(w, 1e-6);
+      frac = Math.min(frac, Math.max(0, cap));
+    }
 
     let ix = 0;
     let iy = 0;
@@ -1065,12 +1070,20 @@
     px /= plen;
     py /= plen;
 
-    const spreadPx = Math.min(18, Math.min(w, h) * 0.14);
     const mid = (players.length - 1) / 2;
+    const room = Math.min(w * 0.5 - inset - Math.abs(ix), h * 0.5 - inset - Math.abs(iy));
+    const spreadPx =
+      mid < 0.5 ? 0 : Math.min(13, Math.max(0, (room * 0.9) / Math.max(mid, 0.01)));
     const stack = spreadPx * (playerIdx - mid);
 
-    const x = cell.offsetLeft + w / 2 + ix + px * stack;
-    const y = cell.offsetTop + h / 2 + iy + py * stack;
+    const minX = cell.offsetLeft + inset;
+    const maxX = cell.offsetLeft + w - inset;
+    const minY = cell.offsetTop + inset;
+    const maxY = cell.offsetTop + h - inset;
+    let x = cell.offsetLeft + w / 2 + ix + px * stack;
+    let y = cell.offsetTop + h / 2 + iy + py * stack;
+    x = clamp(x, minX, maxX);
+    y = clamp(y, minY, maxY);
     token.style.left = `${x}px`;
     token.style.top = `${y}px`;
   }

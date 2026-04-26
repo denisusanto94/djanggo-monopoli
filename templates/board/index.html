@@ -117,6 +117,30 @@
     </dialog>
   </div>
 
+  <div class="board-zoom-dock" id="board-zoom-dock" role="region" aria-label="Zoom papan">
+    <div class="board-zoom-dock__inner">
+      <span class="board-zoom-dock__label" id="board-zoom-label">Zoom papan</span>
+      <div class="board-zoom-dock__row">
+        <button type="button" class="board-zoom-dock__btn" id="board-zoom-out" aria-label="Perkecil papan">−</button>
+        <input
+          type="range"
+          id="board-zoom-range"
+          min="70"
+          max="130"
+          value="100"
+          step="2"
+          aria-labelledby="board-zoom-label"
+          aria-valuemin="70"
+          aria-valuemax="130"
+          aria-valuenow="100"
+          aria-valuetext="100%"
+        />
+        <button type="button" class="board-zoom-dock__btn" id="board-zoom-in" aria-label="Perbesar papan">+</button>
+      </div>
+      <span class="board-zoom-dock__val" id="board-zoom-val" aria-hidden="true">100%</span>
+    </div>
+  </div>
+
   <div class="orbit-dock" id="orbit-dock">
     <div
       class="orbit-panel"

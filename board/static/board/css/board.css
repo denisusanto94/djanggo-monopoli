@@ -1,4 +1,6 @@
 :root {
+  /* Zoom papan (slider pojok kiri bawah); 1 = ukuran default */
+  --board-zoom: 1;
   --gold: #e8c547;
   --gold-soft: rgba(232, 197, 71, 0.38);
   --glass: rgba(255, 248, 235, 0.12);
@@ -228,12 +230,12 @@ body {
   /* Jarak antar petak — sedikit lebih lebar di diamond agar pojok tidak “nabrak” */
   --grid-gap: clamp(5px, 1vmin, 11px);
   --board-inset: 0px;
-  /* Persegi maksimal (dynamic viewport); ×1.05 = papan ~5% lebih besar */
+  /* Persegi maksimal (dynamic viewport); ×1.05 × --board-zoom = skala papan */
   --board-size: calc(
     min(
       calc(100dvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
       calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
-    ) * 1.05
+    ) * 1.05 * var(--board-zoom, 1)
   );
   --tile-scale: 1.08;
   --tile-scale-hover: 1.14;
@@ -264,7 +266,7 @@ body {
       min(
         calc(100lvw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)),
         calc(100lvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
-      ) * 1.05
+      ) * 1.05 * var(--board-zoom, 1)
     );
   }
 }
@@ -1744,6 +1746,93 @@ body {
   .btn-primary {
     font-size: clamp(0.78rem, 2vw, 0.88rem);
   }
+}
+
+/* Zoom ukuran papan — pojok kiri bawah */
+.board-zoom-dock {
+  position: fixed;
+  left: max(0.65rem, env(safe-area-inset-left, 0px));
+  bottom: max(0.65rem, env(safe-area-inset-bottom, 0px));
+  z-index: 10045;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  pointer-events: none;
+}
+
+.board-zoom-dock__inner {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: min(200px, calc(100vw - 1.5rem));
+  padding: 0.55rem 0.65rem 0.6rem;
+  border-radius: 14px;
+  color: #f2f4ff;
+  background:
+    linear-gradient(180deg, rgba(100, 88, 150, 0.32) 0%, transparent 42%),
+    linear-gradient(165deg, rgba(40, 34, 62, 0.96), rgba(18, 14, 32, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 14px 32px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px) saturate(1.06);
+}
+
+.board-zoom-dock__label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.88;
+  color: rgba(248, 244, 255, 0.92);
+}
+
+.board-zoom-dock__row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.board-zoom-dock__btn {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #f8f6ff;
+  cursor: pointer;
+  background: linear-gradient(165deg, rgba(90, 78, 130, 0.95), rgba(36, 30, 58, 0.98));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  touch-action: manipulation;
+}
+
+.board-zoom-dock__btn:hover {
+  filter: brightness(1.08);
+}
+
+.board-zoom-dock__btn:active {
+  transform: scale(0.96);
+}
+
+.board-zoom-dock__row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  height: 1.35rem;
+  accent-color: var(--gold);
+}
+
+.board-zoom-dock__val {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0.82;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Kontrol orbit 3D — pojok kanan bawah (disembunyikan) */

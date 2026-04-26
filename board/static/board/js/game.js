@@ -325,6 +325,7 @@
         if (e.target.closest("#board-hub-float")) return;
         if (e.target.closest(".modal")) return;
         if (e.target.closest("#orbit-dock")) return;
+        if (e.target.closest("#board-zoom-dock")) return;
       }
       /* elementsFromPoint — cari .tile paling atas */
       const stack = document.elementsFromPoint(e.clientX, e.clientY);
@@ -712,7 +713,8 @@
           t.closest("#board-hub-float") ||
           t.closest("#board-mass") ||
           t.closest("#board-grid") ||
-          t.closest(".board-shell")
+          t.closest(".board-shell") ||
+          t.closest("#board-zoom-dock")
         ) {
           return;
         }
@@ -741,6 +743,51 @@
       orbitKnob.style.transform = `translate(${knobNx * maxR}px, ${knobNy * maxR}px)`;
     }
   });
+
+  /** Zoom ukuran papan (CSS --board-zoom); persist localStorage */
+  const LS_BOARD_ZOOM = "mono.boardZoom.v1";
+  const boardZoomRange = document.getElementById("board-zoom-range");
+  const boardZoomOut = document.getElementById("board-zoom-out");
+  const boardZoomIn = document.getElementById("board-zoom-in");
+  const boardZoomVal = document.getElementById("board-zoom-val");
+
+  function clampZoomPct(n) {
+    return clamp(Math.round(Number(n) / 2) * 2, 70, 130);
+  }
+
+  function applyBoardZoomPct(pct) {
+    const p = clampZoomPct(pct);
+    root.style.setProperty("--board-zoom", String(p / 100));
+    if (boardZoomRange) {
+      boardZoomRange.value = String(p);
+      boardZoomRange.setAttribute("aria-valuenow", String(p));
+      boardZoomRange.setAttribute("aria-valuetext", `${p}%`);
+    }
+    if (boardZoomVal) boardZoomVal.textContent = `${p}%`;
+    try {
+      localStorage.setItem(LS_BOARD_ZOOM, JSON.stringify({ v: 1, pct: p }));
+    } catch (_) {
+      /* ignore */
+    }
+    if (gameStarted) updateAllTokens();
+  }
+
+  function initBoardZoom() {
+    if (!boardZoomRange) return;
+    let pct = 100;
+    try {
+      const raw = localStorage.getItem(LS_BOARD_ZOOM);
+      const o = raw ? JSON.parse(raw) : null;
+      if (o && o.v === 1 && typeof o.pct === "number") pct = o.pct;
+    } catch (_) {
+      /* ignore */
+    }
+    applyBoardZoomPct(pct);
+    boardZoomRange.addEventListener("input", () => applyBoardZoomPct(Number(boardZoomRange.value)));
+    boardZoomRange.addEventListener("change", () => applyBoardZoomPct(Number(boardZoomRange.value)));
+    boardZoomOut?.addEventListener("click", () => applyBoardZoomPct(Number(boardZoomRange.value) - 6));
+    boardZoomIn?.addEventListener("click", () => applyBoardZoomPct(Number(boardZoomRange.value) + 6));
+  }
 
   let gameStarted = false;
 
@@ -1132,5 +1179,6 @@
     renderBoardStep0();
   }
 
+  initBoardZoom();
   initOrbit();
 })();
